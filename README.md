@@ -2,7 +2,9 @@
 
 **Read, analyse and replay Battlefield 2 recordings (`.bf2demo`) - in a terminal or in your browser, on a PC or a phone.**
 
-### ▶ [**Live demo: bf2viewer.syrians.dev**](https://bf2viewer.syrians.dev)
+### Live demo
+
+**▶ [bf2viewer.syrians.dev](https://bf2viewer.syrians.dev)**
 
 Open it on a PC or a phone and try everything: the replay on the game's map, the live scoreboard (<kbd>Tab</kbd>), the moments finder, scene clips,
 and the English / Arabic interface. It shows four real rounds (Wake Island, Mashtuur City, Kubra Dam, Dalian Plant); uploads are switched off on the demo,
@@ -16,7 +18,7 @@ minimap: soldiers, vehicles, flags, kill feed, tickets, scoreboard, squads, and 
 
 <p align="center"><img src="docs/img/viewer-desktop.png" alt="The viewer: the game's minimap, units, kill feed, tickets and flags, with the log on the right" width="92%"></p>
 
-**Contents:** [Live demo](#-live-demo-bf2viewersyriansdev) · [Features](#features) · [Quick start](#quick-start) · [Documentation](#documentation) · [Technical reference](#technical-reference-the-bf2demo-parser) · [Support](#support) · [Thanks](#thanks) · [Legal](#legal)
+**Contents:** [Live demo](#live-demo) · [Features](#features) · [Quick start](#quick-start) · [Documentation](#documentation) · [Technical reference](#technical-reference-the-bf2demo-parser) · [Support](#support) · [Thanks](#thanks) · [Legal](#legal)
 
 Topics: `battlefield-2` `bf2` `bf2demo` `replay-viewer` `demo-parser` `refractor-2` `reverse-engineering` `game-replay` `python` `flask`
 
