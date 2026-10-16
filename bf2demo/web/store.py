@@ -135,6 +135,17 @@ class Store:
             traceback.print_exc()
             self._jobs[did] = {"state": "error", "error": f"{type(exc).__name__}: {exc}"}
 
+    def warm(self, say=print) -> int:
+        """Parse every recording that is not cached yet, one after the other (``bf2view --warm``: run it when publishing, so visitors never wait)."""
+        todo = [(did, path) for did, path in self.scan(max_age=0).items() if self.status(did, path) in ("new", "error")]
+        for number, (did, path) in enumerate(todo, 1):
+            say(f"[{number}/{len(todo)}] {os.path.basename(path)} ...")
+            started = time.monotonic()
+            self._parse_now(did, path)
+            job = self._jobs.get(did) or {}
+            say(f"    {job.get('error') or 'ok'} ({time.monotonic() - started:.0f} s)")
+        return len(todo)
+
     def cached_file(self, did: str) -> Optional[str]:
         path = self.resolve(did)
         if path and os.path.isfile(self._cache_path(path)):

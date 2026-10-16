@@ -5,11 +5,13 @@ from __future__ import annotations
 import json
 import os
 import re
+import threading
 from typing import List, Optional
 
 from flask import Flask, Response, abort, jsonify, request, send_file, send_from_directory
 
 from . import donate as donations, maps
+from .limits import RateLimit
 from .assets import GameAssets
 from .store import Store, demo_id
 
@@ -19,7 +21,7 @@ MAX_UPLOAD = 400 * 1024 * 1024
 
 def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders: Optional[List[str]] = None, allow_upload: bool = True,
                max_parse: int = 2, max_upload: int = MAX_UPLOAD, donate_telegram: Optional[str] = None,
-               donate_file: Optional[object] = None) -> Flask:
+               donate_file: Optional[object] = None, behind_proxy: bool = False, clips_per_minute: int = 6, uploads_per_hour: int = 6) -> Flask:
     """``allow_upload=False`` is the public setting: the library is whatever is in ``folders``. ``max_parse`` limits the recordings parsed at once.
     The support section shows ``donate_telegram`` and the payment methods of ``donate_file`` (:mod:`bf2demo.web.donate`); it is hidden while both are empty."""
     cache_dir = cache_dir or os.path.join(os.path.expanduser("~"), ".bf2demo-viewer-cache")
@@ -27,6 +29,19 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
     project = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     donate = donations.build(donate_telegram, donations.default_file(project, os.path.join(project, "local"), cache_dir) if donate_file is None else donate_file or None)    # False = never look
     app = Flask(__name__, static_folder=None)
+    if behind_proxy:                                    # Caddy / nginx in front: the visitor's address is in X-Forwarded-For (one proxy)
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+    clip_limit, upload_limit = RateLimit(clips_per_minute, 60), RateLimit(uploads_per_hour, 3600)
+    clip_slot = threading.BoundedSemaphore(1)           # one clip is built at a time: it loads the whole recording
+
+    def too_many(limit):
+        wait = limit.hit(request.remote_addr or "?")
+        if wait:
+            response = jsonify({"error": f"too many requests, try again in {wait} s"})
+            response.status_code = 429
+            response.headers["Retry-After"] = str(wait)
+            abort(response)
     app.config["MAX_CONTENT_LENGTH"] = max_upload
     store = Store(folders, cache_dir, max_parse=max_parse)
     # high resolution maps made by the user (BF2 Editor mega map renders, downloaded packs): <level>.jpg / .png, they win over everything
@@ -83,9 +98,21 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
         """A cut of the recording as a download: ``?start=<tick>&end=<tick>&lead=<seconds>`` (ticks are absolute demo ticks)."""
         from ..clip import make_clip
         from ..reader import load_demo
+        too_many(clip_limit)
         path = store.resolve(did)
         if path is None:
             abort(404)
+        if not clip_slot.acquire(blocking=False):
+            response = jsonify({"error": "another clip is being built, try again in a moment"})
+            response.status_code = 503
+            response.headers["Retry-After"] = "5"
+            abort(response)
+        try:
+            return _clip_response(path, make_clip, load_demo)
+        finally:
+            clip_slot.release()
+
+    def _clip_response(path, make_clip, load_demo):
         demo = load_demo(path)
         ticks = [p.tick for p in demo.packets if p.tick >= 0]
         if not ticks:
@@ -111,6 +138,7 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
     def upload():
         if not allow_upload:
             abort(403, "uploads are disabled on this server")
+        too_many(upload_limit)
         file = request.files.get("file")
         if file is None or not file.filename.lower().endswith(".bf2demo"):
             abort(400, "expected a .bf2demo file")

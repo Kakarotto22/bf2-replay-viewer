@@ -75,6 +75,21 @@ Then on the server: `sudo systemctl enable --now bf2view` and `curl -I http://12
 * Single worker on purpose: the parse jobs live in the process. Do not raise `--workers`.
 * `BF2VIEW_UPLOAD=1` allows uploads of up to 400 MB each by anyone who can open the page: keep it `0` unless the password stays on.
 
+## A public demo site (checklist)
+
+A visitor should be able to try every feature, and nobody should be able to hurt the server. The settings that do it:
+
+| what | setting | why |
+|---|---|---|
+| a few good recordings, parsed before anyone visits | put them in `BF2VIEW_DEMOS`, then run `bf2view --demos DIR --cache DIR --warm` once (and after every update: a new format re-parses) | parsing costs 20 s to minutes and up to GBs of RAM: do it yourself, not on a visitor's click |
+| no uploads | `BF2VIEW_UPLOAD=0` (the default) | an upload is listed for **everyone** (names of other players), fills the disk and costs a parse; the demo recordings you chose show all features |
+| one parse at a time | `BF2VIEW_MAX_PARSE=1` | a long round needs several GB |
+| limits per visitor | `BF2VIEW_BEHIND_PROXY=1` (Caddy / nginx in front), `BF2VIEW_CLIPS_PER_MIN=6` | the Clip button loads a whole recording; one clip is built at a time and a visitor gets `429` after 6 a minute; uploads (if you enable them) are limited to 6 an hour |
+| a size cap if you do enable uploads | `BF2VIEW_MAX_UPLOAD_MB=40` and a cron job that deletes `<cache>/uploads` older than a day | the upload folder never cleans itself |
+| TLS, headers, compression | the Caddy file of this folder (`encode zstd gzip`, HSTS, no `Server` header) | |
+
+Why not GitHub Pages: it serves static files only. The viewer needs a Python process (it parses the recording and builds clips), so it stays on a server.
+
 ## The support button (Telegram, crypto wallets, payment links)
 
 Copy `donate.example.json` to `/srv/bf2view/donate.json`, replace the placeholders and set `BF2VIEW_DONATE_FILE=/srv/bf2view/donate.json` (and restart).

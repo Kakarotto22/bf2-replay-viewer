@@ -20,6 +20,8 @@ def main(argv=None) -> int:
     parser.add_argument("--max-parse", type=int, default=2, metavar="N", help="recordings parsed at the same time (default 2)")
     parser.add_argument("--donate-telegram", metavar="@NAME", help="Telegram username shown in the support section (hidden when not given)")
     parser.add_argument("--donate-file", metavar="FILE", help="JSON file with the payment methods of the support section (wallets, payment links); see deploy/donate.example.json")
+    parser.add_argument("--warm", action="store_true", help="parse every recording of --demos now (one after the other) and exit: run it when publishing so visitors never wait")
+    parser.add_argument("--behind-proxy", action="store_true", help="a reverse proxy (Caddy, nginx) is in front: take the visitor's address from X-Forwarded-For for the rate limits")
     parser.add_argument("--host", default="127.0.0.1", help="bind address (default: local only)")
     parser.add_argument("--port", type=int, default=8080)
     args = parser.parse_args(argv)
@@ -35,7 +37,11 @@ def main(argv=None) -> int:
         print(GameAssets(root, os.path.join(os.path.abspath(cache), "game")).build_store())
         return 0
     app = create_app(args.demos, args.cache, args.maps, allow_upload=not args.no_upload, max_parse=args.max_parse,
-                     donate_telegram=args.donate_telegram, donate_file=args.donate_file)
+                     donate_telegram=args.donate_telegram, donate_file=args.donate_file, behind_proxy=args.behind_proxy)
+    if args.warm:
+        done = app.config["STORE"].warm()
+        print(f"{done} recording(s) parsed")
+        return 0
     print(f"bf2demo viewer on http://{args.host}:{args.port}/")
     app.run(host=args.host, port=args.port, threaded=True)
     return 0

@@ -69,3 +69,25 @@ class PublicModeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AbuseLimitsTest(unittest.TestCase):
+    def test_rate_limit_window(self):
+        from bf2demo.web.limits import RateLimit
+        limit = RateLimit(2, 60)
+        self.assertEqual([limit.hit("a", 0), limit.hit("a", 1)], [0, 0])
+        self.assertGreater(limit.hit("a", 2), 0)                  # the third within the minute waits
+        self.assertEqual(limit.hit("b", 2), 0)                    # another address is not affected
+        self.assertEqual(limit.hit("a", 61), 0)                   # the window moved on
+
+    def test_clip_and_upload_answer_429_when_asked_too_often(self):
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(lambda: shutil.rmtree(tmp, ignore_errors=True))
+        demos = os.path.join(tmp, "demos"); os.makedirs(demos); shutil.copy(sample_path(SAMPLE), demos)
+        c = create_app([demos], os.path.join(tmp, "cache"), donate_file=False, clips_per_minute=2, uploads_per_hour=1).test_client()
+        did = c.get("/api/demos").get_json()[0]["id"]
+        codes = [c.get(f"/api/demos/{did}/clip?end=3000").status_code for _ in range(3)]
+        self.assertEqual(codes, [200, 200, 429])
+        self.assertIn("Retry-After", c.get(f"/api/demos/{did}/clip").headers)
+        bad = lambda: c.post("/api/upload", data={"file": (io.BytesIO(b"x"), "a.txt")}, content_type="multipart/form-data").status_code
+        self.assertEqual([bad(), bad()], [400, 429])
