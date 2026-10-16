@@ -10,6 +10,7 @@ Everything comes from environment variables so the same code runs on a laptop an
 ``BF2VIEW_MAX_UPLOAD_MB``  largest accepted upload (default 400)
 ``BF2VIEW_DONATE_TELEGRAM``  Telegram username (``@name``) shown in the support section; empty = no section
 ``BF2VIEW_BEHIND_PROXY``  ``1`` behind Caddy / nginx: the visitor's address (rate limits) comes from X-Forwarded-For
+``BF2VIEW_BEHIND_CLOUDFLARE``  ``1`` when Cloudflare is in front: the limits count ``CF-Connecting-IP`` (otherwise every visitor looks like a Cloudflare address)
 ``BF2VIEW_CLIPS_PER_MIN`` / ``BF2VIEW_UPLOADS_PER_HOUR``  per address limits of the expensive endpoints (default 6 and 6)
 ``BF2VIEW_DONATE_FILE``  JSON file with the payment methods (wallets, links), see ``deploy/donate.example.json``
 
@@ -57,6 +58,7 @@ app = create_app(
     donate_telegram=os.environ.get("BF2VIEW_DONATE_TELEGRAM"),
     donate_file=os.environ.get("BF2VIEW_DONATE_FILE") or None,
     behind_proxy=os.environ.get("BF2VIEW_BEHIND_PROXY", "0") == "1",
+    behind_cloudflare=os.environ.get("BF2VIEW_BEHIND_CLOUDFLARE", "0") == "1",
     clips_per_minute=int(os.environ.get("BF2VIEW_CLIPS_PER_MIN", "6")),
     uploads_per_hour=int(os.environ.get("BF2VIEW_UPLOADS_PER_HOUR", "6")),
 )

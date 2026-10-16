@@ -133,7 +133,7 @@ class Store:
             self._jobs[did] = {"state": "done", "error": None}
         except Exception as exc:  # noqa: BLE001 - reported to the client
             traceback.print_exc()
-            self._jobs[did] = {"state": "error", "error": f"{type(exc).__name__}: {exc}"}
+            self._jobs[did] = {"state": "error", "error": f"could not read this recording ({type(exc).__name__}); details are in the server log"}   # no paths or internals to visitors
 
     def warm(self, say=print) -> int:
         """Parse every recording that is not cached yet, one after the other (``bf2view --warm``: run it when publishing, so visitors never wait)."""

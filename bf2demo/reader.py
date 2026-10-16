@@ -23,14 +23,23 @@ _PACKET_HEADER = struct.Struct("<ii")
 _INFLATE_CHUNK = 1 << 16
 
 
+#: largest decompressed recording accepted (real rounds are tens of MB; a longer cap only helps a decompression bomb)
+MAX_INFLATED = 1 << 30
+
+
 def inflate(data: bytes) -> Tuple[bytes, bool]:
     """Inflate a Zlib stream, salvaging as much as possible.
 
     Returns ``(output, recovered)`` where ``recovered`` is True when the stream
     could not be fully inflated and the output is a salvaged prefix.
     """
+    first = zlib.decompressobj()
     try:
-        return zlib.decompress(data), False
+        out0 = first.decompress(data, MAX_INFLATED + 1)         # never inflate more than the cap: a few KB can claim gigabytes (zip bomb)
+        if len(out0) > MAX_INFLATED:
+            raise ValueError(f"recording is larger than {MAX_INFLATED >> 20} MB when decompressed")
+        if first.eof and not first.unconsumed_tail:
+            return out0, False
     except zlib.error:
         pass
 
@@ -43,6 +52,8 @@ def inflate(data: bytes) -> Tuple[bytes, bool]:
         try:
             out += dec.decompress(data[offset:end])
             offset = end
+            if len(out) > MAX_INFLATED:
+                raise ValueError(f"recording is larger than {MAX_INFLATED >> 20} MB when decompressed")
         except zlib.error:
             # Rebuild the inflater over the known-good prefix, then advance
             # byte-by-byte to squeeze out every recoverable byte.

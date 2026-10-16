@@ -34,6 +34,14 @@ def norm_icon(path: str) -> str:
     return os.path.splitext(path)[0]
 
 
+_ICON_SEGMENT = re.compile(r"[a-z0-9_ .\-]+")
+
+
+def safe_icon_key(key: str) -> bool:
+    """True for a plain relative game path (``ingame/vehicles/mini_tank``): no empty, ``.`` or ``..`` segment, no odd characters, bounded length."""
+    return 0 < len(key) <= 200 and all(seg not in (".", "..") and _ICON_SEGMENT.fullmatch(seg) for seg in key.split("/"))
+
+
 def parse_templates(text: str) -> Dict[str, Dict[str, str]]:
     """Template name (lower case) -> ``{property: value}`` for the HUD properties of ``.con`` / ``.tweak`` text.
 
@@ -154,10 +162,16 @@ class GameAssets:
             return self._hud_index
 
     def _stored(self, *parts: str) -> Optional[str]:
-        return os.path.join(self.store, *parts) if self.store else None
+        """A path inside the store, or ``None`` when it would leave it (a ``..`` or a link must never reach another folder)."""
+        if not self.store:
+            return None
+        path = os.path.join(self.store, *parts)
+        return path if os.path.realpath(path).startswith(os.path.realpath(self.store) + os.sep) else None
 
     def has_icon(self, icon: str) -> bool:
         key = norm_icon(icon)
+        if not safe_icon_key(key):
+            return False
         path = self._stored("hud", key.replace("/", os.sep) + ".png")
         return key in self._index() or bool(path and os.path.isfile(path))
 
@@ -167,6 +181,8 @@ class GameAssets:
         Converted once from the game's archive and kept in the store (``hud/<key>.png``); later requests need no game install.
         """
         key = norm_icon(icon)
+        if not safe_icon_key(key):
+            return None                                           # a name that is not a plain relative game path never touches the disk
         path = self._stored("hud", key.replace("/", os.sep) + ".png")
         if path and os.path.isfile(path):
             with open(path, "rb") as fh:

@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import os
 import re
+import secrets
 import threading
 from typing import List, Optional
 
@@ -16,12 +18,16 @@ from .assets import GameAssets
 from .store import Store, demo_id
 
 STATIC = os.path.join(os.path.dirname(__file__), "static")
+# Only scripts of this site run (no inline script, no eval, no other origin): a name like <img onerror=...> inside a recording cannot execute even if some
+# page code forgot to escape it. Styles may be inline (the page sets colours on elements); images may be data: URLs (QR codes, canvases).
+CSP = ("default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; "
+       "object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
 MAX_UPLOAD = 400 * 1024 * 1024
 
 
 def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders: Optional[List[str]] = None, allow_upload: bool = True,
                max_parse: int = 2, max_upload: int = MAX_UPLOAD, donate_telegram: Optional[str] = None,
-               donate_file: Optional[object] = None, behind_proxy: bool = False, clips_per_minute: int = 6, uploads_per_hour: int = 6) -> Flask:
+               donate_file: Optional[object] = None, behind_proxy: bool = False, behind_cloudflare: bool = False, clips_per_minute: int = 6, uploads_per_hour: int = 6) -> Flask:
     """``allow_upload=False`` is the public setting: the library is whatever is in ``folders``. ``max_parse`` limits the recordings parsed at once.
     The support section shows ``donate_telegram`` and the payment methods of ``donate_file`` (:mod:`bf2demo.web.donate`); it is hidden while both are empty."""
     cache_dir = cache_dir or os.path.join(os.path.expanduser("~"), ".bf2demo-viewer-cache")
@@ -35,8 +41,17 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
     clip_limit, upload_limit = RateLimit(clips_per_minute, 60), RateLimit(uploads_per_hour, 3600)
     clip_slot = threading.BoundedSemaphore(1)           # one clip is built at a time: it loads the whole recording
 
+    def visitor() -> str:
+        """The address the limits count: Cloudflare's ``CF-Connecting-IP`` when the site is behind it (only then), else the connection's."""
+        if behind_cloudflare:
+            try:
+                return str(ipaddress.ip_address((request.headers.get("CF-Connecting-IP") or "").strip()))
+            except ValueError:
+                pass
+        return request.remote_addr or "?"
+
     def too_many(limit):
-        wait = limit.hit(request.remote_addr or "?")
+        wait = limit.hit(visitor())
         if wait:
             response = jsonify({"error": f"too many requests, try again in {wait} s"})
             response.status_code = 429
@@ -55,8 +70,16 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
 
     @app.after_request
     def headers(response):
-        response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("Referrer-Policy", "same-origin")
+        h = response.headers
+        h.setdefault("X-Content-Type-Options", "nosniff")
+        h.setdefault("Referrer-Policy", "same-origin")
+        h.setdefault("X-Frame-Options", "DENY")
+        h.setdefault("Content-Security-Policy", CSP)
+        h.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+        h.setdefault("Cross-Origin-Resource-Policy", "same-origin")
+        h.setdefault("Permissions-Policy", "geolocation=(), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()")
+        if request.is_secure:
+            h.setdefault("Strict-Transport-Security", "max-age=31536000")
         return response
 
     @app.get("/")
@@ -142,8 +165,9 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
         file = request.files.get("file")
         if file is None or not file.filename.lower().endswith(".bf2demo"):
             abort(400, "expected a .bf2demo file")
-        name = os.path.basename(file.filename).replace("\\", "_").replace("/", "_")
-        path = os.path.join(store.upload_dir, name)
+        # the client's name is only a hint: keep letters, digits and . _ - of its last path part, add a random suffix, never overwrite another file
+        stem = re.sub(r"[^A-Za-z0-9._-]+", "_", re.split(r"[\\/]", file.filename)[-1][: -len(".bf2demo")]).strip("._")[:60] or "upload"
+        path = os.path.join(store.upload_dir, f"{stem}_{secrets.token_hex(4)}.bf2demo")
         file.save(path)
         store.scan(max_age=0)
         return jsonify({"id": demo_id(path)})
