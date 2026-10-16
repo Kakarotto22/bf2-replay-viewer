@@ -1,0 +1,4 @@
+# what the viewer needs on a server (the parser itself needs nothing but Python 3.10+)
+flask>=3.0
+pillow>=10.0
+gunicorn>=21.2

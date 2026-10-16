@@ -1,0 +1,97 @@
+{
+"doc": "gameLogic.setTeamName of each level (team 1, team 2)",
+"teams": {
+"dalian_plant": {
+"1": "CH",
+"2": "US"
+},
+"daqing_oilfields": {
+"1": "CH",
+"2": "US"
+},
+"dragon_valley": {
+"1": "CH",
+"2": "US"
+},
+"fushe_pass": {
+"1": "CH",
+"2": "US"
+},
+"greatwall": {
+"1": "CH",
+"2": "EU"
+},
+"gulf_of_oman": {
+"1": "MEC",
+"2": "US"
+},
+"highway_tampa": {
+"1": "MEC",
+"2": "US"
+},
+"kubra_dam": {
+"1": "MEC",
+"2": "US"
+},
+"mashtuur_city": {
+"1": "MEC",
+"2": "US"
+},
+"midnight_sun": {
+"1": "CH",
+"2": "US"
+},
+"operationharvest": {
+"1": "MEC",
+"2": "US"
+},
+"operationroadrage": {
+"1": "MEC",
+"2": "US"
+},
+"operationsmokescreen": {
+"1": "MEC",
+"2": "EU"
+},
+"operation_blue_pearl": {
+"1": "CH",
+"2": "US"
+},
+"operation_clean_sweep": {
+"1": "MEC",
+"2": "US"
+},
+"road_to_jalalabad": {
+"1": "MEC",
+"2": "US"
+},
+"sharqi_peninsula": {
+"1": "MEC",
+"2": "US"
+},
+"songhua_stalemate": {
+"1": "CH",
+"2": "US"
+},
+"strike_at_karkand": {
+"1": "MEC",
+"2": "US"
+},
+"taraba_quarry": {
+"1": "MEC",
+"2": "EU"
+},
+"wake_island_2007": {
+"1": "CH",
+"2": "US"
+},
+"zatar_wetlands": {
+"1": "MEC",
+"2": "US"
+},
+"dalian_2_v_2": {
+"1": "CH",
+"2": "US"
+}
+}
+}

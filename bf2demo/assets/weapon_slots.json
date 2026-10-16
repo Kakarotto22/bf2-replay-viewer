@@ -1,0 +1,2145 @@
+{
+"doc": "kit template (lower case) -> weapon item index (SoldierNetworkable weapon_item_index) -> weapon templates, default first, unlocks after",
+"kits": {
+"ch_assault": {
+"1": [
+"kni_knife"
+],
+"2": [
+"chpis_qsz92"
+],
+"3": [
+"rurif_gp25",
+"usrif_g3a3",
+"sasrif_fn2000"
+],
+"4": [
+"rurgl_gp25",
+"ushgr_m67",
+"sasgr_fn2000"
+],
+"5": [
+"hgr_smoke",
+"nshgr_flashbang"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"ch_at": {
+"1": [
+"kni_knife"
+],
+"2": [
+"chpis_qsz92"
+],
+"3": [
+"chrif_type85",
+"chsht_protecta",
+"eurif_fnp90"
+],
+"4": [
+"chat_eryx"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"ch_engineer": {
+"1": [
+"kni_knife"
+],
+"2": [
+"chpis_qsz92"
+],
+"3": [
+"chsht_norinco982",
+"ussht_jackhammer",
+"sasrif_mp7"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"at_mine"
+],
+"6": [
+"wrench"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"ch_medic": {
+"1": [
+"kni_knife"
+],
+"2": [
+"chpis_qsz92"
+],
+"3": [
+"rurif_ak47",
+"usrif_sa80",
+"sasrif_g36e"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"medikit"
+],
+"6": [
+"defibrillator"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"ch_sniper": {
+"1": [
+"kni_knife"
+],
+"2": [
+"chpis_qsz92_silencer"
+],
+"3": [
+"chsni_type88",
+"ussni_m95_barret",
+"gbrif_l96a1"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"ch_specops": {
+"1": [
+"kni_knife"
+],
+"2": [
+"chpis_qsz92_silencer"
+],
+"3": [
+"chrif_type95",
+"usrif_g36c",
+"usrif_fnscarl"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"ch_support": {
+"1": [
+"kni_knife"
+],
+"2": [
+"chpis_qsz92"
+],
+"3": [
+"chlmg_type95",
+"rulmg_pkm",
+"sasrif_mg36"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"ammokit"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"chinsurgent_assault": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_gp30",
+"usrif_g3a3"
+],
+"4": [
+"rurgl_gp30",
+"ushgr_m67"
+],
+"5": [
+"nshgr_flashbang"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"chinsurgent_at": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_bizon",
+"chsht_protecta"
+],
+"4": [
+"insgr_rpg"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"chinsurgent_engineer": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rusht_saiga12",
+"ussht_jackhammer"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"at_mine"
+],
+"6": [
+"wrench"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"chinsurgent_medic": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_ak101",
+"usrif_sa80"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"medikit"
+],
+"6": [
+"defibrillator"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"chinsurgent_sniper": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurif_dragunov",
+"ussni_m95_barret"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"chinsurgent_specops": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurrif_ak74u",
+"usrif_g36c"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"chinsurgent_support": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rulmg_rpk74",
+"rulmg_pkm"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"ammokit"
+],
+"6": [
+"sasrif_teargas"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"eu_assault": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"gbrif_sa80a2_l85",
+"usrif_g3a3",
+"usrif_g3a3",
+"sasrif_fn2000",
+"sasrif_fn2000"
+],
+"4": [
+"gbgr_sa80a2_l85",
+"ushgr_m67",
+"ushgr_m67",
+"sasgr_fn2000",
+"sasgr_fn2000"
+],
+"5": [
+"hgr_smoke",
+"nshgr_flashbang",
+"nshgr_flashbang"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"eu_at": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"eurif_fnp90",
+"chsht_protecta",
+"chsht_protecta"
+],
+"4": [
+"usatp_predator"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"eu_engineer": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"gbrif_benelli_m4",
+"ussht_jackhammer",
+"ussht_jackhammer",
+"sasrif_mp7",
+"sasrif_mp7"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"at_mine"
+],
+"6": [
+"wrench"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"eu_medic": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"eurif_famas",
+"usrif_sa80",
+"usrif_sa80",
+"sasrif_g36e",
+"sasrif_g36e"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"medikit"
+],
+"6": [
+"defibrillator"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"eu_sniper": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs_silencer"
+],
+"3": [
+"gbrif_l96a1",
+"ussni_m95_barret",
+"ussni_m95_barret"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"eu_specops": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs_silencer"
+],
+"3": [
+"eurif_hk53a3",
+"usrif_g36c",
+"usrif_g36c",
+"usrif_fnscarl",
+"usrif_fnscarl"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"eu_support": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"eurif_hk21",
+"rulmg_pkm",
+"rulmg_pkm",
+"sasrif_mg36",
+"sasrif_mg36"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"ammokit"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mec_assault": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_gp30",
+"usrif_g3a3",
+"sasrif_fn2000"
+],
+"4": [
+"rurgl_gp30",
+"ushgr_m67",
+"sasgr_fn2000"
+],
+"5": [
+"hgr_smoke",
+"nshgr_flashbang"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mec_at": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_bizon",
+"chsht_protecta",
+"eurif_fnp90"
+],
+"4": [
+"chat_eryx"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mec_engineer": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rusht_saiga12",
+"ussht_jackhammer",
+"sasrif_mp7"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"at_mine"
+],
+"6": [
+"wrench"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mec_medic": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_ak101",
+"usrif_sa80",
+"sasrif_g36e"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"medikit"
+],
+"6": [
+"defibrillator"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mec_sniper": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurif_dragunov",
+"ussni_m95_barret",
+"gbrif_l96a1"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mec_specops": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurrif_ak74u",
+"usrif_g36c",
+"usrif_fnscarl"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mec_support": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rulmg_rpk74",
+"rulmg_pkm",
+"sasrif_mg36"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"ammokit"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mecsf_assault": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_ak101",
+"usrif_g3a3",
+"usrif_g3a3"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"nshgr_flashbang"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mecsf_assault_special": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_ak101",
+"usrif_g3a3",
+"usrif_g3a3"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"nshgr_flashbang"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mecsf_at": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_bizon",
+"chsht_protecta",
+"chsht_protecta"
+],
+"4": [
+"chat_eryx"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mecsf_at_special": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_bizon",
+"chsht_protecta",
+"chsht_protecta"
+],
+"4": [
+"chat_eryx"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mecsf_engineer": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rusht_saiga12",
+"ussht_jackhammer"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"at_mine"
+],
+"6": [
+"wrench"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mecsf_medic": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_ak47",
+"usrif_sa80"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"medikit"
+],
+"6": [
+"defibrillator"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mecsf_sniper": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurif_dragunov",
+"ussni_m95_barret",
+"ussni_m95_barret"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mecsf_sniper_special": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurif_dragunov",
+"ussni_m95_barret",
+"ussni_m95_barret"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mecsf_specops": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurrif_ak74u",
+"usrif_g36c",
+"usrif_g36c"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mecsf_specops_special": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurrif_ak74u",
+"usrif_g36c",
+"usrif_g36c"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"mecsf_support": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rulmg_rpk74",
+"rulmg_pkm"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"ammokit"
+],
+"6": [
+"sasrif_teargas"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"meinsurgent_assault": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_gp30",
+"usrif_g3a3"
+],
+"4": [
+"rurgl_gp30",
+"ushgr_m67"
+],
+"5": [
+"nshgr_flashbang"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"meinsurgent_at": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_bizon",
+"chsht_protecta"
+],
+"4": [
+"insgr_rpg"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"meinsurgent_engineer": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rusht_saiga12",
+"ussht_jackhammer"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"at_mine"
+],
+"6": [
+"wrench"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"meinsurgent_medic": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_ak101",
+"usrif_sa80"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"medikit"
+],
+"6": [
+"defibrillator"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"meinsurgent_sniper": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurif_dragunov",
+"ussni_m95_barret"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"meinsurgent_specops": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurrif_ak74u",
+"usrif_g36c"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"meinsurgent_support": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rulmg_rpk74",
+"rulmg_pkm"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"ammokit"
+],
+"6": [
+"sasrif_teargas"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"sas_assault": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"sasrif_fn2000",
+"usrif_g3a3"
+],
+"4": [
+"sasgr_fn2000",
+"ushgr_m67"
+],
+"5": [
+"nshgr_flashbang"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"sas_at": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"usrif_mp5_a3",
+"chsht_protecta"
+],
+"4": [
+"usatp_predator"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"sas_engineer": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"sasrif_mp7",
+"ussht_jackhammer"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"at_mine"
+],
+"6": [
+"wrench"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"sas_medic": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"sasrif_g36e",
+"usrif_sa80"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"medikit"
+],
+"6": [
+"defibrillator"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"sas_sniper": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs_silencer"
+],
+"3": [
+"usrif_m24",
+"ussni_m95_barret"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"sas_specops": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs_silencer"
+],
+"3": [
+"sasrif_g36k",
+"usrif_g36c"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"sas_support": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"sasrif_mg36",
+"rulmg_pkm"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"ammokit"
+],
+"6": [
+"sasrif_teargas"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"seal_assault": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"usrif_fnscarh",
+"usrif_g3a3",
+"usrif_g3a3"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"nshgr_flashbang"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"seal_assault_special": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"usrif_fnscarh",
+"usrif_g3a3",
+"usrif_g3a3"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"nshgr_flashbang"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"seal_at": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"usrif_mp5_a3",
+"chsht_protecta",
+"chsht_protecta"
+],
+"4": [
+"usatp_predator"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"seal_at_special": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"usrif_mp5_a3",
+"chsht_protecta",
+"chsht_protecta"
+],
+"4": [
+"usatp_predator"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"seal_engineer": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"usrif_remington11-87",
+"ussht_jackhammer"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"at_mine"
+],
+"6": [
+"wrench"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"seal_medic": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"usrif_m16a2",
+"usrif_sa80"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"medikit"
+],
+"6": [
+"defibrillator"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"seal_sniper": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs_silencer"
+],
+"3": [
+"usrif_m24",
+"ussni_m95_barret",
+"ussni_m95_barret"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"seal_sniper_special": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs_silencer"
+],
+"3": [
+"usrif_m24",
+"ussni_m95_barret",
+"ussni_m95_barret"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"seal_specops": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs_silencer"
+],
+"3": [
+"usrif_fnscarl",
+"usrif_g36c",
+"usrif_g36c"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"seal_specops_special": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs_silencer"
+],
+"3": [
+"usrif_fnscarl",
+"usrif_g36c",
+"usrif_g36c"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"seal_support": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"uslmg_m249saw",
+"rulmg_pkm"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"ammokit"
+],
+"6": [
+"sasrif_teargas"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"spetsnaz_assault": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_gp30",
+"usrif_g3a3"
+],
+"4": [
+"rurgl_gp30",
+"ushgr_m67"
+],
+"5": [
+"nshgr_flashbang"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"spetsnaz_at": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_bizon",
+"chsht_protecta"
+],
+"4": [
+"chat_eryx"
+],
+"6": [
+"nsrif_grapplinghook"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"spetsnaz_engineer": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rusht_saiga12",
+"ussht_jackhammer"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"at_mine"
+],
+"6": [
+"wrench"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"spetsnaz_medic": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rurif_ak101",
+"usrif_sa80"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"medikit"
+],
+"6": [
+"defibrillator"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"spetsnaz_sniper": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurif_dragunov",
+"ussni_m95_barret"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"spetsnaz_specops": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira_silencer"
+],
+"3": [
+"rurrif_ak74u",
+"usrif_g36c"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"6": [
+"nsrif_crossbow"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"spetsnaz_support": {
+"1": [
+"kni_knife"
+],
+"2": [
+"rupis_baghira"
+],
+"3": [
+"rulmg_rpk74",
+"rulmg_pkm"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"ammokit"
+],
+"6": [
+"sasrif_teargas"
+],
+"7": [
+"nightvisiongoggles"
+],
+"8": [
+"gasmask"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"us_assault": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"usrif_m203",
+"usrif_g3a3",
+"usrif_g3a3",
+"sasrif_fn2000",
+"sasrif_fn2000"
+],
+"4": [
+"usrgl_m203",
+"ushgr_m67",
+"ushgr_m67",
+"sasgr_fn2000",
+"sasgr_fn2000"
+],
+"5": [
+"hgr_smoke",
+"nshgr_flashbang",
+"nshgr_flashbang"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"us_at": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"usrif_mp5_a3",
+"chsht_protecta",
+"chsht_protecta",
+"eurif_fnp90"
+],
+"4": [
+"usatp_predator"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"us_engineer": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"usrif_remington11-87",
+"ussht_jackhammer",
+"ussht_jackhammer",
+"sasrif_mp7",
+"sasrif_mp7"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"at_mine"
+],
+"6": [
+"wrench"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"us_medic": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"usrif_m16a2",
+"usrif_sa80",
+"usrif_sa80",
+"sasrif_g36e",
+"sasrif_g36e"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"medikit"
+],
+"6": [
+"defibrillator"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"us_sniper": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs_silencer"
+],
+"3": [
+"usrif_m24",
+"ussni_m95_barret",
+"ussni_m95_barret",
+"gbrif_l96a1"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"usmin_claymore"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"us_specops": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs_silencer"
+],
+"3": [
+"usrif_m4",
+"usrif_g36c",
+"usrif_g36c",
+"usrif_fnscarl",
+"usrif_fnscarl"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"c4_explosives"
+],
+"9": [
+"parachutelauncher"
+]
+},
+"us_support": {
+"1": [
+"kni_knife"
+],
+"2": [
+"uspis_92fs"
+],
+"3": [
+"uslmg_m249saw",
+"rulmg_pkm",
+"rulmg_pkm",
+"sasrif_mg36",
+"sasrif_mg36"
+],
+"4": [
+"ushgr_m67"
+],
+"5": [
+"ammokit"
+],
+"9": [
+"parachutelauncher"
+]
+}
+}
+}

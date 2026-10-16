@@ -1,0 +1,21 @@
+# Drop this file next to your other site files (e.g. /etc/caddy/sites/bf2view.caddy, imported by `import sites/*` in the Caddyfile)
+# and replace the host name. Caddy gets the TLS certificate by itself once the DNS A/AAAA record of the sub domain points to this server.
+bf2.example.com {
+	encode zstd gzip
+
+	# PRIVATE BETA: the viewer draws the game's own icons, fonts and minimaps and the recordings hold real player names, so keep it behind a password
+	# until you have decided what to publish.  Make the hash with:  caddy hash-password
+	basicauth {
+		beta REPLACE_WITH_OUTPUT_OF_caddy_hash-password
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy same-origin
+		-Server
+	}
+
+	reverse_proxy 127.0.0.1:8081
+}

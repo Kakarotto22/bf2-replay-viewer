@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BF2 Demo Viewer</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header id="topbar">
+  <a id="brand" href="#/"><span class="logo">&#9678;</span> <b>BF2</b> Demo Viewer</a>
+  <span id="crumb"></span>
+  <span class="spacer"></span>
+  <a id="donateBtn" class="donate-btn" target="_blank" rel="noopener noreferrer" role="button" hidden>&#9829; <span data-t="donate_short"></span></a>
+  <button id="langBtn" class="ghost" title="Language / اللغة">العربية</button>
+</header>
+
+<main id="library" class="view">
+  <section id="donateCard" class="donate-card" hidden>
+    <div class="donate-heart">&#9829;</div>
+    <div class="donate-text"><b data-t="donate_title"></b><span data-t="donate_text"></span></div>
+    <div class="donate-actions">
+      <a id="donateLink" class="btn primary" target="_blank" rel="noopener noreferrer" hidden><span data-t="donate_telegram"></span> <bdi id="donateHandle" dir="ltr"></bdi></a>
+      <button id="donateCopy" class="ghost" data-t="donate_copy" hidden></button>
+      <button id="donateMore" class="btn primary" data-t="donate_more" hidden></button>
+    </div>
+  </section>
+  <section class="toolbar">
+    <input id="libSearch" type="search" data-ph="search_demos" autocomplete="off">
+    <select id="libMap"></select>
+    <label class="check"><input id="libHumans" type="checkbox"><span data-t="only_humans"></span></label>
+    <select id="libSort">
+      <option value="date" data-t="sort_date"></option>
+      <option value="players" data-t="sort_players"></option>
+      <option value="kills" data-t="sort_kills"></option>
+      <option value="duration" data-t="sort_duration"></option>
+    </select>
+    <span class="spacer"></span>
+    <label class="btn primary" for="uploadInput" data-t="upload" style="display:none"></label>
+    <input id="uploadInput" type="file" accept=".bf2demo" hidden>
+  </section>
+  <section id="libStats" class="muted"></section>
+  <section id="cards" class="cards"></section>
+</main>
+
+<main id="viewer" class="view" hidden>
+  <section id="center">
+    <div id="mapWrap">
+      <canvas id="map"></canvas>
+      <canvas id="hudbar"></canvas>
+      <div id="killfeed"></div>
+      <div id="drawerFilters" class="drawer" hidden><div id="filtersBody"></div><details class="more"><summary data-t="legend"></summary><div id="legendBody"></div></details></div>
+      <div id="drawerClip" class="drawer" hidden><div id="clipBody"></div></div>
+      <canvas id="sb" hidden></canvas>
+      <div id="tip" hidden></div>
+      <div id="perf" hidden></div>
+      <div id="zoomBtns"><button id="zIn">+</button><button id="zOut">&minus;</button><button id="zFit">&#9635;</button></div>
+    </div>
+    <div id="transport">
+      <button id="playBtn" class="primary round">&#9654;</button>
+      <span id="clock">0:00</span>
+      <canvas id="timeline"></canvas>
+      <select id="speed"></select>
+      <span id="mapTools">
+        <button id="btnBoard" data-t="scoreboard" title="Tab"></button>
+        <button id="btnFilters" data-t="filters"></button>
+        <button id="btnClip" data-t="clip"></button>
+      </span>
+    </div>
+  </section>
+
+  <aside id="right" class="panel">
+    <div class="tabs">
+      <button data-tab="log" class="active" data-t="log"></button>
+      <button data-tab="moments" data-t="moments"></button>
+      <button data-tab="player" data-t="player"></button>
+    </div>
+    <div class="tabbody" data-tab="log">
+      <input id="feedSearch" type="search" data-ph="search_log" autocomplete="off">
+      <div id="feedKinds" class="chips small"></div>
+      <div id="feedList" class="feedlist"></div>
+    </div>
+    <div class="tabbody" data-tab="moments" hidden><div id="moments"></div></div>
+    <div class="tabbody" data-tab="player" hidden>
+      <input id="pSearch" type="search" data-ph="find_player" autocomplete="off">
+      <div id="board" class="finder"></div>
+      <div id="playerPanel"></div>
+    </div>
+  </aside>
+</main>
+
+<div id="donateDlg" class="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="donateDlgTitle">
+    <button id="donateClose" class="ghost modal-x" aria-label="Close">&times;</button>
+    <h3 id="donateDlgTitle" data-t="donate_title"></h3>
+    <p class="muted" data-t="donate_text"></p>
+    <div id="donateList"></div>
+    <p class="donate-warn" data-t="donate_warn"></p>
+  </div>
+</div>
+
+<div id="loading" hidden><div class="spinner"></div><div id="loadingText"></div></div>
+<script src="/static/js/vendor/qrcode.js"></script>
+<script type="module" src="/static/js/main.js"></script>
+</body>
+</html>

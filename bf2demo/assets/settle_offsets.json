@@ -1,0 +1,197 @@
+{
+ "doc": "settled Y minus spawner Y per mobile vehicle template (see scripts/build_settle_table.py)",
+ "templates": {
+  "aav_tunguska": {
+   "dy": 0.97,
+   "n": 3,
+   "coherence": 1.0,
+   "spread": 0.009
+  },
+  "ahe_ah1z": {
+   "dy": 0.526,
+   "n": 4,
+   "coherence": 0.0,
+   "spread": 0.742
+  },
+  "ahe_z10": {
+   "dy": 0.762,
+   "n": 4,
+   "coherence": 0.0,
+   "spread": 0.748
+  },
+  "air_f35b": {
+   "dy": 1.888,
+   "n": 1,
+   "coherence": 1.0,
+   "spread": 0.0
+  },
+  "air_j10": {
+   "dy": 1.803,
+   "n": 1,
+   "coherence": 1.0,
+   "spread": 0.0
+  },
+  "apc_btr90": {
+   "dy": 0.593,
+   "n": 8,
+   "coherence": 0.62,
+   "spread": 0.847
+  },
+  "apc_wz551": {
+   "dy": 0.733,
+   "n": 9,
+   "coherence": 0.67,
+   "spread": 0.011
+  },
+  "boat_rib": {
+   "dy": -0.195,
+   "n": 15,
+   "coherence": 1.0,
+   "spread": 0.0
+  },
+  "chthe_z8": {
+   "dy": 2.232,
+   "n": 2,
+   "coherence": 1.0,
+   "spread": 0.001
+  },
+  "jeep_faav": {
+   "dy": 0.643,
+   "n": 25,
+   "coherence": 0.8,
+   "spread": 0.024
+  },
+  "jep_mec_paratrooper": {
+   "dy": 0.738,
+   "n": 26,
+   "coherence": 0.77,
+   "spread": 0.019
+  },
+  "jep_nanjing": {
+   "dy": 0.889,
+   "n": 15,
+   "coherence": 0.93,
+   "spread": 0.003
+  },
+  "jep_paratrooper": {
+   "dy": 0.738,
+   "n": 18,
+   "coherence": 0.56,
+   "spread": 0.053
+  },
+  "jep_vodnik": {
+   "dy": 1.136,
+   "n": 17,
+   "coherence": 0.94,
+   "spread": 0.004
+  },
+  "ruair_mig29": {
+   "dy": 1.617,
+   "n": 1,
+   "coherence": 1.0,
+   "spread": 0.0
+  },
+  "ruair_su34": {
+   "dy": 1.105,
+   "n": 2,
+   "coherence": 0.0,
+   "spread": 1.169
+  },
+  "rutnk_t90": {
+   "dy": 0.996,
+   "n": 26,
+   "coherence": 0.85,
+   "spread": 0.041
+  },
+  "tnk_type98": {
+   "dy": 0.671,
+   "n": 17,
+   "coherence": 0.88,
+   "spread": 0.209
+  },
+  "usaav_m6": {
+   "dy": 0.832,
+   "n": 3,
+   "coherence": 0.33,
+   "spread": 0.027
+  },
+  "usair_f15": {
+   "dy": 2.034,
+   "n": 2,
+   "coherence": 0.0,
+   "spread": 0.025
+  },
+  "usapc_lav25": {
+   "dy": 0.722,
+   "n": 14,
+   "coherence": 0.93,
+   "spread": 0.001
+  },
+  "usjep_hmmwv": {
+   "dy": 0.843,
+   "n": 17,
+   "coherence": 0.82,
+   "spread": 0.834
+  },
+  "usthe_uh60": {
+   "dy": 1.313,
+   "n": 3,
+   "coherence": 0.33,
+   "spread": 0.051
+  },
+  "ustnk_m1a2": {
+   "dy": 0.694,
+   "n": 28,
+   "coherence": 0.75,
+   "spread": 0.048
+  },
+  "xp2_musclecar_01": {
+   "dy": 0.647,
+   "n": 4,
+   "coherence": 1.0,
+   "spread": 0.002
+  },
+  "xpak2_eurofighter": {
+   "dy": 1.873,
+   "n": 1,
+   "coherence": 1.0,
+   "spread": 0.0
+  },
+  "xpak2_faav": {
+   "dy": 0.643,
+   "n": 13,
+   "coherence": 0.85,
+   "spread": 0.024
+  },
+  "xpak2_hmmwv": {
+   "dy": 0.843,
+   "n": 9,
+   "coherence": 0.56,
+   "spread": 1.243
+  },
+  "xpak2_lav25": {
+   "dy": 0.718,
+   "n": 1,
+   "coherence": 1.0,
+   "spread": 0.0
+  },
+  "xpak2_semi": {
+   "dy": 1.155,
+   "n": 1,
+   "coherence": 1.0,
+   "spread": 0.0
+  },
+  "xpak2_tnkc2": {
+   "dy": 1.209,
+   "n": 9,
+   "coherence": 0.67,
+   "spread": 0.056
+  },
+  "xpak2_tnkl2a6": {
+   "dy": 1.238,
+   "n": 5,
+   "coherence": 0.6,
+   "spread": 0.073
+  }
+ }
+}

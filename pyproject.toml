@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bf2-replay-viewer"
+dynamic = ["version"]
+description = "Parser and browser replay viewer for Battlefield 2 (.bf2demo) recordings. Unofficial fan project."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [{ name = "Kakarotto" }]
+keywords = ["battlefield-2", "bf2", "bf2demo", "replay", "demo-parser", "refractor-2", "reverse-engineering"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Games/Entertainment :: First Person Shooters",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = []                     # the parser needs nothing but the standard library
+
+[project.optional-dependencies]
+web = ["flask>=3.0", "pillow>=10.0"]
+server = ["flask>=3.0", "pillow>=10.0", "gunicorn>=21.2"]
+
+[project.scripts]
+bf2demo = "bf2demo.cli:main"
+bf2view = "bf2demo.web.__main__:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "bf2demo.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["bf2demo*"]
+
+[tool.setuptools.package-data]
+bf2demo = ["assets/*", "web/static/*", "web/static/js/*", "web/static/js/vendor/*"]

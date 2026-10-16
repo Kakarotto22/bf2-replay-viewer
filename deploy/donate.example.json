@@ -1,0 +1,10 @@
+{
+  "telegram": "@PASTE_YOUR_TELEGRAM_USERNAME",
+  "methods": [
+    { "label": "USDT", "network": "TRC20", "address": "PASTE_YOUR_TRON_ADDRESS_HERE" },
+    { "label": "Bitcoin", "network": "BTC", "address": "PASTE_YOUR_BITCOIN_ADDRESS_HERE" },
+    { "label": "Ethereum / USDC", "network": "ERC20", "address": "PASTE_YOUR_0x_ADDRESS_HERE" },
+    { "label": "PayPal", "url": "https://paypal.me/PASTE_YOUR_NAME" },
+    { "label": "Bank transfer", "kind": "text", "note": "Write to me on Telegram for the details", "qr": false }
+  ]
+}

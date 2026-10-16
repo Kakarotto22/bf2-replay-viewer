@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+extracted_bin/bf2-linuxded-1.5.3153.0-installer.tgz
+extracted_bin/*.tar.gz
+*.rep/
+*.gpr
+re_work/
+
+samples/rangers2days/
+samples/bf2rangers2Days.zip
+samples/archive/
+
+# third-party assets kept outside git (downloaded packs, converted maps)
+external_assets/
+HighDefinitionMinimap.zip
+
+# private / machine specific (never part of a release or a deployment)
+local/
+samples/CustomTaraServer.zip
+samples/customZatar.bf2demo
+# the game's own and the server's binaries are only inputs for reverse engineering (copyrighted)
+extracted_bin/
+
+# recordings and caches are the user's own (the few test recordings of the project are added explicitly)
+*.bf2demo
+!samples/*.bf2demo
+samples/archive/
+.bf2demo-viewer-cache/
