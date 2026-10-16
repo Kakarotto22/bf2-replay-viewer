@@ -41,7 +41,7 @@
 deploy/publish.sh deploy@your-server.example.com /مسار/الديمو/التي/اخترتها
 # أضف --no-assets في آخر السطر لاستبعاد رسومات اللعبة
 ```
-وعلى الخادم: `sudo systemctl enable --now bf2view` ثم `curl -I http://127.0.0.1:8081/` (المتوقع 200).
+وعلى الخادم: `sudo systemctl enable --now bf2view` ثم `curl -I http://127.0.0.1:18642/` (المتوقع 200).
 
 ## النطاق والنطاق الفرعي وTLS (Caddy)
 

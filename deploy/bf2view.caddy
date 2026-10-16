@@ -17,5 +17,5 @@ bf2.example.com {
 		-Server
 	}
 
-	reverse_proxy 127.0.0.1:8081
+	reverse_proxy 127.0.0.1:18642
 }

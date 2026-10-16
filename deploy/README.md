@@ -59,7 +59,9 @@ deploy/publish.sh deploy@your-server.example.com /path/to/the/recordings/you/cho
 #   add --no-assets as the last argument to leave the game's artwork out
 ```
 
-Then on the server: `sudo systemctl enable --now bf2view` and `curl -I http://127.0.0.1:8081/` (expects `200`).
+The port `18642` (localhost only) is a free-looking high port on purpose: common ones like 8080 / 8081 are taken by other tools on most servers. Check yours with `ss -ltn` and change it in the unit AND in the proxy file together.
+
+Then on the server: `sudo systemctl enable --now bf2view` and `curl -I http://127.0.0.1:18642/` (expects `200`).
 
 ## Domain, sub domain and TLS (Caddy)
 

@@ -9,7 +9,7 @@ Group=bf2view
 WorkingDirectory=/srv/bf2view/app
 EnvironmentFile=/srv/bf2view/env
 # ONE worker: parse jobs and their status live in the process; threads serve the requests
-ExecStart=/srv/bf2view/venv/bin/gunicorn --workers 1 --threads 8 --timeout 120 --bind 127.0.0.1:8081 bf2demo.web.wsgi:app
+ExecStart=/srv/bf2view/venv/bin/gunicorn --workers 1 --threads 8 --timeout 120 --bind 127.0.0.1:18642 bf2demo.web.wsgi:app
 Restart=on-failure
 RestartSec=3
 
