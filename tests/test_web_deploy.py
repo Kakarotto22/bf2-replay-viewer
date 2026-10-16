@@ -91,3 +91,23 @@ class AbuseLimitsTest(unittest.TestCase):
         self.assertIn("Retry-After", c.get(f"/api/demos/{did}/clip").headers)
         bad = lambda: c.post("/api/upload", data={"file": (io.BytesIO(b"x"), "a.txt")}, content_type="multipart/form-data").status_code
         self.assertEqual([bad(), bad()], [400, 429])
+
+
+class EnvFileTest(unittest.TestCase):
+    def test_an_env_file_overrides_the_environment_of_the_wsgi_entry(self):
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(lambda: shutil.rmtree(tmp, ignore_errors=True))
+        envfile = os.path.join(tmp, "bf2view.env")
+        with open(envfile, "w", encoding="utf-8") as fh:
+            fh.write("# comment\nBF2VIEW_UPLOAD=0\nBF2VIEW_DEMOS=" + tmp + "\nBF2VIEW_CACHE=" + os.path.join(tmp, "c") + "\nOTHER=ignored\n")
+        old = {k: os.environ.get(k) for k in ("BF2VIEW_ENV_FILE", "BF2VIEW_UPLOAD", "BF2VIEW_DEMOS", "BF2VIEW_CACHE", "OTHER")}
+        os.environ.update(BF2VIEW_ENV_FILE=envfile, BF2VIEW_UPLOAD="1")                       # the service says 1, the file says 0
+        try:
+            sys.modules.pop("bf2demo.web.wsgi", None)
+            module = importlib.import_module("bf2demo.web.wsgi")
+            self.assertFalse(module.app.test_client().get("/api/game").get_json()["upload"])
+            self.assertNotIn("OTHER", os.environ)                                              # only BF2VIEW_* keys are taken
+        finally:
+            for k, v in old.items():
+                os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+            sys.modules.pop("bf2demo.web.wsgi", None)

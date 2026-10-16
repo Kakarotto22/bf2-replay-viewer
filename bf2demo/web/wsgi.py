@@ -13,6 +13,8 @@ Everything comes from environment variables so the same code runs on a laptop an
 ``BF2VIEW_CLIPS_PER_MIN`` / ``BF2VIEW_UPLOADS_PER_HOUR``  per address limits of the expensive endpoints (default 6 and 6)
 ``BF2VIEW_DONATE_FILE``  JSON file with the payment methods (wallets, links), see ``deploy/donate.example.json``
 
+A ``bf2view.env`` file in the project folder overrides all of these (see ``_load_env_file``).
+
 Use ONE worker process (threads are fine): the parse jobs and their status live in the process.
 """
 
@@ -21,6 +23,26 @@ from __future__ import annotations
 import os
 
 from .app import create_app
+
+
+def _load_env_file() -> None:
+    """``bf2view.env`` in the project folder (or ``BF2VIEW_ENV_FILE``): ``KEY=value`` lines that OVERRIDE the process environment.
+
+    Lets the owner change the settings of a running service without root (edit the file, then ``kill -HUP`` the gunicorn master).
+    """
+    path = os.environ.get("BF2VIEW_ENV_FILE") or os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "bf2view.env")
+    if not os.path.isfile(path):
+        return
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                if key.strip().startswith("BF2VIEW_"):
+                    os.environ[key.strip()] = value.strip()
+
+
+_load_env_file()
 
 
 def _folders(name: str) -> list:
