@@ -156,6 +156,17 @@ def default_file(*folders: str) -> Optional[str]:
     return None
 
 
+def github_link(file: Optional[str]) -> str:
+    """The project's address (``"github": "https://github.com/..."`` in the same file), or ``""``; only ``https`` links are accepted."""
+    if not file:
+        return ""
+    with open(file, encoding="utf-8") as fh:
+        value = str((json.load(fh) or {}).get("github") or "").strip()
+    if value and not re.fullmatch(r"https://[^\s<>\"'`]{4,200}", value):
+        raise ValueError(f"the 'github' link must be an https address: {value!r}")
+    return value
+
+
 def build(telegram: Optional[str] = None, file: Optional[str] = None) -> Optional[dict]:
     """The document the page shows (``{"telegram": name or "", "methods": [...]}``), or ``None`` when nothing is configured."""
     methods: List[dict] = []

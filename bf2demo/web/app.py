@@ -27,13 +27,15 @@ MAX_UPLOAD = 400 * 1024 * 1024
 
 def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders: Optional[List[str]] = None, allow_upload: bool = True,
                max_parse: int = 2, max_upload: int = MAX_UPLOAD, donate_telegram: Optional[str] = None,
-               donate_file: Optional[object] = None, behind_proxy: bool = False, behind_cloudflare: bool = False, clips_per_minute: int = 6, uploads_per_hour: int = 6) -> Flask:
+               donate_file: Optional[object] = None, behind_proxy: bool = False, behind_cloudflare: bool = False, quota_mb: int = 0, list_uploads: bool = False, repo_url: str = "", clips_per_minute: int = 6, uploads_per_hour: int = 6) -> Flask:
     """``allow_upload=False`` is the public setting: the library is whatever is in ``folders``. ``max_parse`` limits the recordings parsed at once.
     The support section shows ``donate_telegram`` and the payment methods of ``donate_file`` (:mod:`bf2demo.web.donate`); it is hidden while both are empty."""
     cache_dir = cache_dir or os.path.join(os.path.expanduser("~"), ".bf2demo-viewer-cache")
     # no option needed: a donate.json in the project folder or in the cache folder is picked up by itself
     project = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    donate = donations.build(donate_telegram, donations.default_file(project, os.path.join(project, "local"), cache_dir) if donate_file is None else donate_file or None)    # False = never look
+    donate_path = donations.default_file(project, os.path.join(project, "local"), cache_dir) if donate_file is None else donate_file or None    # False = never look
+    donate = donations.build(donate_telegram, donate_path)
+    repo = repo_url or donations.github_link(donate_path)               # the project's address, shown in the top bar
     app = Flask(__name__, static_folder=None)
     if behind_proxy:                                    # Caddy / nginx in front: the visitor's address is in X-Forwarded-For (one proxy)
         from werkzeug.middleware.proxy_fix import ProxyFix
@@ -58,7 +60,8 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
             response.headers["Retry-After"] = str(wait)
             abort(response)
     app.config["MAX_CONTENT_LENGTH"] = max_upload
-    store = Store(folders, cache_dir, max_parse=max_parse)
+    store = Store(folders, cache_dir, max_parse=max_parse, quota_mb=quota_mb, list_uploads=list_uploads)
+    threading.Thread(target=store.enforce_quota, daemon=True).start()          # tidy up at start (no-op without a quota)
     # high resolution maps made by the user (BF2 Editor mega map renders, downloaded packs): <level>.jpg / .png, they win over everything
     map_folders = [os.path.abspath(f) for f in (map_folders or [])] + [os.path.join(os.path.abspath(cache_dir), "hd_maps")]
     app.config["STORE"] = store
@@ -169,12 +172,13 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
         stem = re.sub(r"[^A-Za-z0-9._-]+", "_", re.split(r"[\\/]", file.filename)[-1][: -len(".bf2demo")]).strip("._")[:60] or "upload"
         path = os.path.join(store.upload_dir, f"{stem}_{secrets.token_hex(4)}.bf2demo")
         file.save(path)
+        store.enforce_quota()                                  # the oldest upload goes when the quota is exceeded (never the published recordings)
         store.scan(max_age=0)
         return jsonify({"id": demo_id(path)})
 
     @app.get("/api/game")
     def game():
-        return jsonify({"installed": assets.tables() is not None, "upload": allow_upload, "donate": donate})
+        return jsonify({"installed": assets.tables() is not None, "upload": allow_upload, "donate": donate, "repo": repo})
 
     @app.get("/api/hud/<path:icon>.png")
     def hud_icon(icon):

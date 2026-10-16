@@ -199,3 +199,8 @@ body { height: 100dvh; }
 .dm-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; } .dm-qr { display: block; width: 176px; max-width: 100%; aspect-ratio: 1; image-rendering: pixelated; background: #fff; padding: 8px; border-radius: 8px; margin: 4px 0; }
 .dm-qr { width: 168px; }
 @media (min-width: 560px) { .dm { grid-template-columns: 1fr auto; column-gap: 14px; align-items: start; } .dm > .dm-head, .dm > .dm-addr, .dm > .dm-actions, .dm > .dm-note { grid-column: 1; } .dm > .dm-qr { grid-column: 2; grid-row: 1 / span 4; margin: 0; } }
+
+.repo-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); color: var(--text); white-space: nowrap; }
+.repo-btn:hover { border-color: var(--accent); color: var(--accent); }
+#libFooter { margin: 28px 0 8px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12.5px; display: flex; gap: 14px; flex-wrap: wrap; } #libFooter a { color: var(--accent); }
+@media (max-width: 800px) { .repo-text { display: none; } }

@@ -36,7 +36,8 @@ def summarise(doc: dict) -> dict:
 
 
 class Store:
-    def __init__(self, folders: List[str], cache_dir: str, upload_dir: Optional[str] = None, max_parse: int = 2):
+    def __init__(self, folders: List[str], cache_dir: str, upload_dir: Optional[str] = None, max_parse: int = 2, quota_mb: int = 0,
+                 list_uploads: bool = False):
         self.folders = [os.path.abspath(f) for f in folders]
         self.cache_dir = os.path.abspath(cache_dir)
         self.upload_dir = os.path.abspath(upload_dir or os.path.join(cache_dir, "uploads"))
@@ -45,6 +46,9 @@ class Store:
         self._jobs: Dict[str, dict] = {}
         self._slots = threading.BoundedSemaphore(max(1, max_parse))      # recordings parsed at the same time (a big one takes minutes of CPU)
         self._lock = threading.Lock()
+        self.quota = max(0, int(quota_mb)) * 1024 * 1024        # 0 = no limit; see enforce_quota
+        self.list_uploads = list_uploads                         # False: an uploaded recording is reachable by its link only, not shown to everybody
+        self._quota_lock = threading.Lock()
         self._scan: Optional[Dict[str, str]] = None
         self._scan_time = 0.0
 
@@ -63,6 +67,9 @@ class Store:
         self._scan, self._scan_time = found, time.monotonic()
         return found
 
+    def _is_upload(self, path: str) -> bool:
+        return os.path.abspath(path).startswith(self.upload_dir + os.sep)
+
     def _cache_path(self, path: str) -> str:
         st = os.stat(path)
         key = hashlib.sha1(f"{FORMAT}|{os.path.abspath(path).lower()}|{st.st_size}|{int(st.st_mtime)}".encode()).hexdigest()[:20]
@@ -71,6 +78,8 @@ class Store:
     def listing(self) -> List[dict]:
         items = []
         for did, path in self.scan().items():
+            if not self.list_uploads and self._is_upload(path):
+                continue
             st = os.stat(path)
             item = {"id": did, "name": os.path.basename(path), "size": st.st_size, "mtime": int(st.st_mtime),
                     "status": self.status(did, path)}
@@ -134,6 +143,52 @@ class Store:
         except Exception as exc:  # noqa: BLE001 - reported to the client
             traceback.print_exc()
             self._jobs[did] = {"state": "error", "error": f"could not read this recording ({type(exc).__name__}); details are in the server log"}   # no paths or internals to visitors
+
+    def enforce_quota(self) -> int:
+        """Keep the uploads and their parse results under ``quota``: delete the OLDEST uploaded recording (with its parsed document) until they fit.
+
+        Only the upload folder is ever cleaned. The recordings published in ``--demos`` folders, their parsed documents and the viewer's asset
+        store are never touched. Parse results that belong to no recording any more (an old format, a deleted upload) are removed first.
+        Returns the number of files deleted.
+        """
+        if not self.quota:
+            return 0
+        removed = 0
+        with self._quota_lock:
+            current = self.scan(max_age=0)
+            known = set()
+            for path in current.values():
+                try:
+                    base = self._cache_path(path)
+                except OSError:
+                    continue
+                known.update((base, base + ".summary"))
+            cutoff = time.time() - 3600                          # a document being written right now has a fresh .tmp: leave anything younger than an hour
+            for name in os.listdir(self.cache_dir):
+                full = os.path.join(self.cache_dir, name)
+                if name.endswith((".json.gz", ".json.gz.summary")) and full not in known and os.path.isfile(full) and os.path.getmtime(full) < cutoff:
+                    os.remove(full)
+                    removed += 1
+            uploads = []
+            for name in os.listdir(self.upload_dir):
+                path = os.path.join(self.upload_dir, name)
+                if not (name.lower().endswith(".bf2demo") and os.path.isfile(path)):
+                    continue
+                files = [path] + [f for f in (self._cache_path(path), self._cache_path(path) + ".summary") if os.path.isfile(f)]
+                uploads.append((os.path.getmtime(path), demo_id(path), files, sum(os.path.getsize(f) for f in files)))
+            total = sum(item[3] for item in uploads)
+            for mtime, did, files, size in sorted(uploads):
+                if total <= self.quota:
+                    break
+                if (self._jobs.get(did) or {}).get("state") == "running":
+                    continue                                       # never delete what is being parsed
+                for f in files:
+                    os.remove(f)
+                    removed += 1
+                total -= size
+            if removed:
+                self._scan = None
+        return removed
 
     def warm(self, say=print) -> int:
         """Parse every recording that is not cached yet, one after the other (``bf2view --warm``: run it when publishing, so visitors never wait)."""

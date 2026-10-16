@@ -111,3 +111,40 @@ class EnvFileTest(unittest.TestCase):
             for k, v in old.items():
                 os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
             sys.modules.pop("bf2demo.web.wsgi", None)
+
+
+class QuotaTest(unittest.TestCase):
+    """The upload quota deletes the OLDEST upload (with its parsed document), never the published recordings or their documents."""
+
+    def test_oldest_upload_goes_first_and_published_files_stay(self):
+        import time
+        from bf2demo.web.store import Store
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(lambda: shutil.rmtree(tmp, ignore_errors=True))
+        demos, cache = os.path.join(tmp, "demos"), os.path.join(tmp, "cache")
+        os.makedirs(demos)
+        store = Store([demos], cache, quota_mb=1)
+        published = os.path.join(demos, "keep_me.bf2demo")
+        with open(published, "wb") as fh:
+            fh.write(b"p" * 400_000)
+        keep_doc = store._cache_path(published)
+        with open(keep_doc, "wb") as fh:
+            fh.write(b"d" * 300_000)
+        ups = []
+        for age, name in ((300, "old"), (200, "mid"), (100, "new")):
+            path = os.path.join(store.upload_dir, name + ".bf2demo")
+            with open(path, "wb") as fh:
+                fh.write(b"u" * 450_000)
+            os.utime(path, (time.time() - age, time.time() - age))
+            ups.append(path)
+        orphan = os.path.join(cache, "0123456789abcdef0123.json.gz")                              # belongs to no recording: removed
+        with open(orphan, "wb") as fh:
+            fh.write(b"o" * 10)
+        os.utime(orphan, (time.time() - 7200, time.time() - 7200))
+        removed = store.enforce_quota()
+        self.assertGreaterEqual(removed, 2)
+        self.assertFalse(os.path.exists(ups[0]))                                                  # the oldest is gone ...
+        self.assertTrue(os.path.exists(ups[2]))                                                   # ... the newest stays
+        self.assertFalse(os.path.exists(orphan))
+        self.assertTrue(os.path.exists(published) and os.path.exists(keep_doc))                   # published recordings and their documents are never deleted
+        self.assertEqual([i["name"] for i in store.listing()], ["keep_me.bf2demo"])               # uploads are not listed publicly

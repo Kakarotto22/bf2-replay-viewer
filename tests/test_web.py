@@ -199,8 +199,10 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(listed["summary"]["map"], doc["demo"]["map"])
         with open(os.path.join(SAMPLES, SAMPLE), "rb") as fh:                          # upload lands in the upload folder
             data = {"file": (fh, "up.bf2demo")}
-            self.assertEqual(self.client.post("/api/upload", data=data, content_type="multipart/form-data").status_code, 200)
-        self.assertEqual(len(self.client.get("/api/demos").get_json()), 2)
+            reply = self.client.post("/api/upload", data=data, content_type="multipart/form-data")
+            self.assertEqual(reply.status_code, 200)
+        self.assertEqual(len(self.client.get("/api/demos").get_json()), 1)               # an upload is NOT listed for everybody ...
+        self.assertEqual(self.client.get(f"/api/demos/{reply.get_json()['id']}").status_code, 202)   # ... but its link works
 
     def test_clients_cannot_name_paths(self):
         for bad in ("..", "../../etc/passwd", "%2e%2e%2fsecret", "0123456789abcdef"):

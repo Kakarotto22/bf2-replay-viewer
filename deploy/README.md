@@ -85,7 +85,7 @@ A visitor should be able to try every feature, and nobody should be able to hurt
 | no uploads | `BF2VIEW_UPLOAD=0` (the default) | an upload is listed for **everyone** (names of other players), fills the disk and costs a parse; the demo recordings you chose show all features |
 | one parse at a time | `BF2VIEW_MAX_PARSE=1` | a long round needs several GB |
 | limits per visitor | `BF2VIEW_BEHIND_PROXY=1` (Caddy / nginx in front), `BF2VIEW_CLIPS_PER_MIN=6` | the Clip button loads a whole recording; one clip is built at a time and a visitor gets `429` after 6 a minute; uploads (if you enable them) are limited to 6 an hour |
-| a size cap if you do enable uploads | `BF2VIEW_MAX_UPLOAD_MB=40` and a cron job that deletes `<cache>/uploads` older than a day | the upload folder never cleans itself |
+| a size cap if you do enable uploads | `BF2VIEW_MAX_UPLOAD_MB=80` and `BF2VIEW_QUOTA_MB=2500` | when uploads + their parsed documents exceed the quota the OLDEST upload is deleted; the recordings of `BF2VIEW_DEMOS` and the asset store are never touched. Uploads are reachable by their link only (`BF2VIEW_LIST_UPLOADS=1` lists them) |
 | TLS, headers, compression | the Caddy file of this folder (`encode zstd gzip`, HSTS, no `Server` header) | |
 
 Why not GitHub Pages: it serves static files only. The viewer needs a Python process (it parses the recording and builds clips), so it stays on a server.

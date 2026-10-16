@@ -82,3 +82,21 @@ class DonateTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RepoLinkTest(unittest.TestCase):
+    def test_the_project_link_comes_from_the_same_file_and_must_be_https(self):
+        folder = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(folder, ignore_errors=True))
+        path = os.path.join(folder, "donate.json")
+        for value, ok in (("https://github.com/Kakarotto22/bf2-replay-viewer", True), ("http://github.com/x/y", False), ("javascript:alert(1)", False), ('https://x.y/"onmouseover="1', False)):
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump({"telegram": "@my_name", "github": value}, fh)
+            with self.subTest(value=value):
+                if ok:
+                    client = create_app([], os.path.join(folder, "c"), donate_file=path).test_client()
+                    self.assertEqual(client.get("/api/game").get_json()["repo"], value)
+                else:
+                    with self.assertRaises(ValueError):
+                        create_app([], os.path.join(folder, "c2"), donate_file=path)
+        self.assertEqual(create_app([], os.path.join(folder, "c3"), donate_file=False).test_client().get("/api/game").get_json()["repo"], "")

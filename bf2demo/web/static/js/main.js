@@ -238,7 +238,8 @@ $("langBtn").onclick = () => {
 // the upload button starts hidden (no flash on a server without uploads) and is shown when the server accepts uploads
 api("/api/game").then((r) => {
   if (r.json.upload !== false) document.querySelector('label[for="uploadInput"]').style.display = "";
-  if (r.json.donate) showDonate(r.json.donate);
+  if (r.json.donate && (r.json.donate.telegram || (r.json.donate.methods || []).length)) showDonate(r.json.donate);
+  if (r.json.repo) { for (const id of ["repoBtn", "repoLink"]) { $(id).href = r.json.repo; $(id).hidden = false; } }
 }).catch(() => {});
 
 /** The support section (top bar button, library card, dialog) exists only when the server has a Telegram username or payment methods. */
