@@ -7,7 +7,7 @@ const STRINGS = {
     sort_kills: "Most kills", sort_duration: "Longest", upload: "Upload .bf2demo", all_maps: "All maps", demos: "recordings",
     ready: "Ready", parsing: "Parsing...", new: "Not parsed yet", error: "Error", empty: "Nothing here.",
     parsing_long: "Reading the recording... a long round with many players can take a few minutes the first time", loading: "Loading...",
-    donate_short: "Support", unofficial: "Unofficial fan project, not affiliated with EA or DICE. MIT license.", source_code: "Source code on GitHub", donate_title: "Support this project", donate_telegram: "Telegram", donate_copy: "Copy username", donate_copied: "Copied", donate_more: "Ways to donate", donate_warn: "Send on the network written next to the address: funds sent on a wrong network are lost. Copy the address with the button instead of typing it.", donate_open: "Open", donate_qr: "QR code", donate_hide_qr: "Hide QR", donate_scan: "Scan with your wallet or phone camera", donate_copy_addr: "Copy",
+    donate_short: "Support", loading_map: "Loading the map...", fullscreen: "Full screen / map only", unofficial: "Unofficial fan project, not affiliated with EA or DICE. MIT license.", source_code: "Source code on GitHub", donate_title: "Support this project", donate_telegram: "Telegram", donate_copy: "Copy username", donate_copied: "Copied", donate_more: "Ways to donate", donate_warn: "Send on the network written next to the address: funds sent on a wrong network are lost. Copy the address with the button instead of typing it.", donate_open: "Open", donate_qr: "QR code", donate_hide_qr: "Hide QR", donate_scan: "Scan with your wallet or phone camera", donate_copy_addr: "Copy",
     donate_text: "A free fan-made replay viewer, built by reverse engineering the game. If it is useful to you, a donation keeps the server running and the work going. Contact me on Telegram.",
     humans: "Players", bots: "bots", kills: "Kills", deaths: "Deaths", score: "Score", kd: "K/D", name: "Name", team: "Team", back: "Library",
     filters: "Filters", legend: "Legend", log: "Log", scoreboard: "Scoreboard", player: "Player", info: "Round",
@@ -38,7 +38,7 @@ const STRINGS = {
     sort_kills: "الأكثر قتلاً", sort_duration: "الأطول", upload: "رفع ملف bf2demo", all_maps: "كل الخرائط", demos: "تسجيل",
     ready: "جاهز", parsing: "جارٍ القراءة...", new: "لم يُقرأ بعد", error: "خطأ", empty: "لا يوجد شيء.",
     parsing_long: "جارٍ قراءة التسجيل... الجولة الطويلة بلاعبين كثيرين قد تستغرق دقائق في المرة الأولى", loading: "جارٍ التحميل...",
-    donate_short: "ادعم", unofficial: "مشروع معجبين غير رسمي، غير تابع لـ EA أو DICE. ترخيص MIT.", source_code: "الكود المصدري على GitHub", donate_title: "ادعم هذا المشروع", donate_telegram: "تيليجرام", donate_copy: "نسخ المعرّف", donate_copied: "تم النسخ", donate_more: "طرق التبرع", donate_warn: "أرسل على الشبكة المكتوبة بجانب العنوان: ما يُرسل على شبكة خاطئة يضيع. انسخ العنوان بالزر ولا تكتبه يدوياً.", donate_open: "فتح", donate_qr: "رمز QR", donate_hide_qr: "إخفاء QR", donate_scan: "امسحه بمحفظتك أو بكاميرا الهاتف", donate_copy_addr: "نسخ",
+    donate_short: "ادعم", loading_map: "جارٍ تحميل الخريطة...", fullscreen: "ملء الشاشة / الخريطة فقط", unofficial: "مشروع معجبين غير رسمي، غير تابع لـ EA أو DICE. ترخيص MIT.", source_code: "الكود المصدري على GitHub", donate_title: "ادعم هذا المشروع", donate_telegram: "تيليجرام", donate_copy: "نسخ المعرّف", donate_copied: "تم النسخ", donate_more: "طرق التبرع", donate_warn: "أرسل على الشبكة المكتوبة بجانب العنوان: ما يُرسل على شبكة خاطئة يضيع. انسخ العنوان بالزر ولا تكتبه يدوياً.", donate_open: "فتح", donate_qr: "رمز QR", donate_hide_qr: "إخفاء QR", donate_scan: "امسحه بمحفظتك أو بكاميرا الهاتف", donate_copy_addr: "نسخ",
     donate_text: "عارض تسجيلات مجاني صنعه معجب باللعبة عبر الهندسة العكسية. إن أفادك، فتبرعك يبقي الخادم يعمل ويدعم استمرار العمل. تواصل معي عبر تيليجرام.",
     humans: "لاعبون", bots: "بوتات", kills: "القتلى", deaths: "الوفيات", score: "النقاط", kd: "ق/و", name: "الاسم", team: "الفريق", back: "المكتبة",
     filters: "التصفية", legend: "المفتاح", log: "السجل", scoreboard: "النتائج", player: "اللاعب", info: "الجولة",
@@ -74,6 +74,7 @@ export function applyLang() {
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
   document.querySelectorAll("[data-t]").forEach((e) => { e.textContent = T(e.dataset.t); });
+  document.querySelectorAll("[data-tt]").forEach((e) => { e.title = T(e.dataset.tt); });
   document.querySelectorAll("[data-ph]").forEach((e) => { e.placeholder = T(e.dataset.ph); });
   $("langBtn").textContent = lang === "ar" ? "English" : "العربية";
 }

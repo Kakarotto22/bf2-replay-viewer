@@ -19,7 +19,9 @@ export function initTimeline(onSeek) {
 export function resizeTimeline() {
   dpr = window.devicePixelRatio || 1;
   const r = canvas.getBoundingClientRect();
-  canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr);
+  const w = Math.min(4096, Math.max(1, Math.round(r.width * dpr))), h = Math.min(512, Math.max(1, Math.round(r.height * dpr)));
+  if (canvas.width !== w) canvas.width = w;                         // only when the size changed (see mapview.resizeMap)
+  if (canvas.height !== h) canvas.height = h;
   bg = null;
 }
 

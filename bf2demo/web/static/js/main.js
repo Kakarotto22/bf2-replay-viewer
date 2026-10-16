@@ -53,13 +53,15 @@ function frame(ts) {
 // ------------------------------------------------------------------------------------------------------------ routing
 async function route() {
   const token = ++routeToken, m = location.hash.match(/^#\/demo\/([0-9a-f]+)(?:\?(.*))?/);
-  stop();
+  stop(); if (document.body.classList.contains("immersive")) setImmersive(false);
   if (!m) { $("viewer").hidden = true; $("library").hidden = false; $("crumb").textContent = ""; await loadLibrary(); return; }
-  $("library").hidden = true; $("viewer").hidden = false; showLoading(T("loading"));
+  $("library").hidden = true; $("viewer").hidden = false; showLoading(T("loading")); warmAssets();       // tables, fonts and icons load while the recording downloads
   try {
     let r;
     for (;;) {
-      r = await api("/api/demos/" + m[1]);
+      r = await api("/api/demos/" + m[1], undefined, (h) => {          // the map name is in a header: start the map while the document still downloads
+        const name = h.get("X-Demo-Map"); if (name && !earlyMap) earlyMap = { map: name, promise: loadBackdrop(name) };
+      });
       if (r.status !== 202) break;
       if (r.json.status === "error") throw new Error(r.json.error || "parse error");
       $("loadingText").textContent = T("parsing_long");
@@ -73,26 +75,48 @@ async function route() {
 const showLoading = (text) => { $("loading").hidden = false; $("loadingText").textContent = text; };
 const hideLoading = () => { $("loading").hidden = true; };
 
+const FONT_LIST = ["ingameChatFontLocalOutline_8", "digitalNumbers", "hudFontLocalBold_9", "hudFontBold_9", "scoreboardFontLocal_8"];
+let warm = null;
+/** Everything that does not depend on the recording (tables, fonts, HUD icons) starts loading at once, in parallel with the recording itself. */
+function warmAssets() {
+  if (!warm) {
+    const tables = loadAssets();
+    warm = { tables, rest: tables.then(() => Promise.all([loadFonts(FONT_LIST), A.installed ? preload([...HUD_TEXTURES, ...Object.values(A.kits)]) : null])) };
+  }
+  return warm;
+}
+/** The level's minimap (a JPEG) and facts, fetched side by side as soon as the level's name is known. */
+async function loadBackdrop(map) {
+  const imageP = new Promise((ok) => {
+    const image = new Image();
+    image.onload = () => ok(image.naturalWidth ? image : null); image.onerror = () => ok(null);
+    image.src = "/api/maps/" + encodeURIComponent(map) + ".jpg";
+  });
+  try {
+    const [info, image] = await Promise.all([api("/api/maps/" + encodeURIComponent(map)).then((r) => r.json), imageP]);
+    if (info.available && info.world_size) return { info, image };
+  } catch (e) { /* no map: a grid */ }
+  return { info: null, image: null };
+}
+let earlyMap = null;
+
 async function openDemo(doc, q, id) {
+  const mapP = earlyMap && earlyMap.map === doc.demo.map ? earlyMap.promise : loadBackdrop(doc.demo.map), assets = warmAssets();     // all of it in parallel
+  earlyMap = null;
   buildModel(doc); setClipDemo(id); resetFilters();
   S.persp = M.viewTeam; setPerspective(S.persp); S.iconScale = 1; S.speed = 1;
   S.tick = M.tMin; S.sel = null; S.follow = false; S.view = { cx: 0, cz: 0, zoom: 1 };
-  await loadAssets();
-  await loadFonts(["ingameChatFontLocalOutline_8", "digitalNumbers", "hudFontLocalBold_9", "hudFontBold_9", "scoreboardFontLocal_8"]);
-  if (A.installed) await preload([...HUD_TEXTURES, ...Object.values(A.kits)]);
+  $("loadingText").textContent = T("loading_map");
+  await assets.tables;                                               // names and icon tables: small, needed to label vehicles
   for (const tr of M.tracks) tr.info = vehicleInfo(tr.tpl);
   for (const cp of doc.control_points) cp.label = cpDisplayName(cp.template);
   M.feed = M.feed.filter((f) => !isNoise(f));
   for (const f of M.feed) f.display = friendlyText(f.text);
-  let size = 0, image = null;
-  try {
-    const info = (await api("/api/maps/" + doc.demo.map)).json;
-    if (info.available && info.world_size) {
-      size = info.world_size; M.uncapturable = new Set(info.uncapturable || []); setRules(info.rules); image = new Image(); image.src = "/api/maps/" + doc.demo.map + ".png";
-      await new Promise((ok) => { image.onload = image.onerror = ok; });
-      if (!image.naturalWidth) image = null;
-    }
-  } catch (e) { image = null; }
+  let size = 0;
+  const back = await mapP, image = back.image;
+  if (image) { size = back.info.world_size; M.uncapturable = new Set(back.info.uncapturable || []); setRules(back.info.rules); }
+  await Promise.race([assets.rest, new Promise((ok) => setTimeout(ok, 300))]);            // icons and fonts normally arrived meanwhile; never keep the first frame waiting more than 0.3 s (they pop in when they land)
+  assets.rest.then(() => resize(true));                                                    // and when the last one lands, redraw the HUD with it
   if (!image) {                                                // no game install or a custom map: a grid fitted to the recorded positions
     let far = 100;
     for (const t of M.tracks) for (let i = 0; i < t.x.length; i++) far = Math.max(far, Math.abs(t.x[i]), Math.abs(t.z[i]));
@@ -100,10 +124,9 @@ async function openDemo(doc, q, id) {
     size = Math.ceil((far * 2.1) / 100) * 100;
   }
   setBackdrop(image, size);
-  if (smallDevice()) S.layers.hd = false;                      // a phone loads the detailed map only when it is switched on (More options)
-  if (image && S.layers.hd) loadHd(doc.demo.map);
+  if (image && S.layers.hd) loadHd(doc.demo.map);              // after the first frame: a phone gets the light 2048 px version, a PC the full one
   $("crumb").innerHTML = `<a href="#/">${esc(T("back"))}</a> / ${esc(prettyMap(doc.demo.map))} <span class="muted">${esc(doc.demo.recorded_at || "")}</span>`;
-  setOpen(false); buildPanels(); buildSpeed(); resize();
+  setOpen(false); buildPanels(); buildSpeed(); resize(true);
   if (q.has("t")) seek(M.tMin + +q.get("t") * TPS);
   if (q.has("p")) select(+q.get("p"), true);
   if (q.has("z")) S.view.zoom = +q.get("z");
@@ -113,10 +136,28 @@ async function openDemo(doc, q, id) {
   invalidate();
 }
 
-function resize() {
+let lastSize = "";
+function resize(force) {
   if (!M) return;
   const r = $("mapWrap").getBoundingClientRect();
+  const key = [Math.round(r.width), Math.round(r.height), window.devicePixelRatio].join("x");
+  if (!force && key === lastSize) return;                           // nothing changed: never rebuild canvases for nothing (an observer storm would starve a phone)
+  lastSize = key;
   resizeMap(r.width, r.height); resizeTimeline(); dropTimelineCache(); invalidate(); redrawScoreboard(); resetKillFeed();
+}
+let resizeQueued = false;
+const resizeSoon = () => { if (!resizeQueued) { resizeQueued = true; requestAnimationFrame(() => { resizeQueued = false; resize(); }); } };
+
+/** Full screen: the browser's fullscreen where it exists, and always the map-only layout (no top bar, no side panels). */
+function setImmersive(on) {
+  document.body.classList.toggle("immersive", on);
+  $("btnFull").classList.toggle("on", on); $("btnFull").textContent = on ? "✕" : "⛶";
+  const root = document.documentElement;
+  try {
+    if (on && root.requestFullscreen && !document.fullscreenElement) root.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+    else if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  } catch (e) { /* a browser without the API (iPhone Safari): the map-only layout is the full screen */ }
+  resizeSoon();
 }
 // Playback speeds as the game's demo viewer names them (percent of real time), plus faster ones for long rounds.
 export const SPEEDS = [0.05, 0.25, 0.5, 1, 1.5, 3, 6, 10, 20, 30, 60];
@@ -147,16 +188,29 @@ function focus(pid) {
 function initMapInput() {
   const cv = $("map"), tip = $("tip");
   const ptrs = new Map();                          // active pointers (a finger each): one pans, two pinch-zoom
-  let drag = null, moved = false, pinch = null;
+  let drag = null, moved = false, pinch = null, touchTrack = null;
   const local = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top, r]; };
-  const showTip = (tr, mx, my, r) => {
-    if (tr) { tip.innerHTML = tipHtml(tr); tip.hidden = false; tip.style.left = Math.max(0, Math.min(mx + 14, r.width - 220)) + "px"; tip.style.top = my + 14 + "px"; } else tip.hidden = true;
+  const hideTip = () => { tip.hidden = true; };
+  const showTip = (tr, mx, my, r, finger) => {
+    if (!tr) { hideTip(); return; }
+    tip.innerHTML = tipHtml(tr); tip.hidden = false;
+    if (finger) {                                  // above the finger, so the hand never covers it
+      tip.style.left = Math.max(4, Math.min(mx - tip.offsetWidth / 2, r.width - tip.offsetWidth - 4)) + "px";
+      tip.style.top = Math.max(4, my - tip.offsetHeight - 26) + "px";
+    } else { tip.style.left = Math.max(0, Math.min(mx + 14, r.width - 220)) + "px"; tip.style.top = my + 14 + "px"; }
   };
+  const clearTouchHover = () => { touchTrack = null; if (S.hover) { S.hover = null; hoverTrack = null; invalidate(); } hideTip(); };
   const pinchNow = () => { const [a, b] = [...ptrs.values()]; return { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
+  cv.oncontextmenu = (e) => e.preventDefault();    // a long press on a phone must not open the browser's menu
   cv.onpointerdown = (e) => {
     ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); cv.setPointerCapture(e.pointerId); cv.classList.add("drag");
-    if (ptrs.size === 2) { drag = null; moved = true; pinch = pinchNow(); return; }
+    if (ptrs.size === 2) { drag = null; moved = true; pinch = pinchNow(); clearTouchHover(); return; }
     drag = { x: e.clientX, y: e.clientY, cx: S.view.cx, cz: S.view.cz }; moved = false;
+    if (e.pointerType !== "mouse") {               // like the game: touch and hold shows the name, letting go hides it
+      const [mx, my, r] = local(e);
+      touchTrack = pick(mx, my, 22); hoverTrack = touchTrack; S.hover = touchTrack; invalidate();
+      showTip(touchTrack, mx, my, r, true);
+    }
   };
   cv.onpointermove = (e) => {
     const [mx, my, r] = local(e);
@@ -167,14 +221,14 @@ function initMapInput() {
       zoomAt(now.x - r.left, now.y - r.top, now.d / pinch.d); pinch = now; return;
     }
     if (drag) {
-      if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > (e.pointerType === "mouse" ? 3 : 8)) moved = true;
+      if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > (e.pointerType === "mouse" ? 3 : 10)) { if (!moved && e.pointerType !== "mouse") clearTouchHover(); moved = true; }
       if (moved) {
         const k = Math.min(V.W, V.H) / V.worldSize * S.view.zoom; S.follow = false;
         S.view.cx = drag.cx - (e.clientX - drag.x) / k; S.view.cz = drag.cz + (e.clientY - drag.y) / k; invalidate();
       }
       return;
     }
-    if (e.pointerType !== "mouse") return;         // no hover on a touch screen: a tap shows the tip instead
+    if (e.pointerType !== "mouse") return;         // no hover on a touch screen
     const tr = pick(mx, my);
     if (tr !== hoverTrack) { hoverTrack = tr; S.hover = tr; invalidate(); }
     showTip(tr, mx, my, r);
@@ -184,9 +238,9 @@ function initMapInput() {
     if (ptrs.size === 1) { const [p] = ptrs.values(); drag = { x: p.x, y: p.y, cx: S.view.cx, cz: S.view.cz }; pinch = null; moved = true; return; }   // one finger left after a pinch: keep panning, never a tap
     if (ptrs.size > 1) return;
     cv.classList.remove("drag"); drag = null; pinch = null;
+    const touch = e.pointerType !== "mouse", tr = touch ? touchTrack : hoverTrack;
+    if (touch) clearTouchHover();                  // the name disappears the moment the finger leaves the screen
     if (moved || cancelled) return;
-    if (e.pointerType !== "mouse") { const [mx, my, r] = local(e); hoverTrack = pick(mx, my); S.hover = hoverTrack; showTip(hoverTrack, mx, my, r); }
-    const tr = hoverTrack;
     if (tr && tr.kind === "soldier" && tr.owner != null) select(tr.owner, false);
     else if (tr && tr.cls === "UAVVehicle") { const c = commanderOf(tr.team, S.tick | 0); if (c) select(c.player_id, false); }
     else if (tr && tr.kind === "vehicle") { const crew = occupants(tr, S.tick | 0); if (crew.length) select(crew[0], false); }
@@ -226,6 +280,7 @@ function initKeys() {
     else if (e.key === "f" || e.key === "F") callbacks.follow();
     else if (e.key === "Tab") { e.preventDefault(); setOpen(!isOpen()); }
     else if (e.key === "Escape" && isOpen()) setOpen(false);
+    else if (e.key === "Escape" && document.body.classList.contains("immersive")) setImmersive(false);
     else if (e.key === "Escape") { S.sel = null; S.follow = false; renderBoard(); renderPlayerPanel(); invalidate(); }
   });
 }
@@ -301,9 +356,12 @@ initLibrary(async (fd) => {
 initMap($("map")); initMapInput(); initKeys(); initPanels(callbacks); initMoments(callbacks); initScoreboard(callbacks);
 initTimeline((t) => seek(t));
 $("playBtn").onclick = togglePlay;
+$("btnFull").onclick = () => setImmersive(!document.body.classList.contains("immersive"));
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && document.body.classList.contains("immersive")) setImmersive(false); });
 A.onLoad = invalidate;
-window.addEventListener("resize", resize);
-if (window.ResizeObserver) { const ro = new ResizeObserver(() => resize()); ro.observe($("mapWrap")); ro.observe($("timeline")); }   // orientation change, wrapped transport bar, side panel moving below the map
+window.addEventListener("resize", resizeSoon);
+window.addEventListener("orientationchange", resizeSoon);
+if (window.ResizeObserver) new ResizeObserver(resizeSoon).observe($("mapWrap"));       // the map area only: the timeline has the same width, observing it too fed back on itself   // orientation change, wrapped transport bar, side panel moving below the map
 window.addEventListener("hashchange", route);
 applyLang(); route(); raf = requestAnimationFrame(frame);
-window.bf2 = { S, get M() { return M; } };      // handle for debugging in the browser console
+window.bf2 = { S, get M() { return M; }, pick, PERF, V };      // handle for debugging in the browser console

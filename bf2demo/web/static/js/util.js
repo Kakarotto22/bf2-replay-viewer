@@ -28,8 +28,9 @@ export function histAt(hist, tick, dflt) {
   return r < 0 ? dflt : hist[r][1];
 }
 
-export async function api(path, opts) {
+export async function api(path, opts, onHeaders) {
   const r = await fetch(path, opts);
+  if (onHeaders) onHeaders(r.headers);                          // available before the body has arrived
   if (!r.ok && r.status !== 202) throw new Error(path + " -> " + r.status);
   return { status: r.status, json: await r.json() };
 }

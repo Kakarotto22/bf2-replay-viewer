@@ -204,3 +204,19 @@ body { height: 100dvh; }
 .repo-btn:hover { border-color: var(--accent); color: var(--accent); }
 #libFooter { margin: 28px 0 8px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12.5px; display: flex; gap: 14px; flex-wrap: wrap; } #libFooter a { color: var(--accent); }
 @media (max-width: 800px) { .repo-text { display: none; } }
+
+/* phone robustness: no horizontal pan, no accidental page zoom inside the viewer, canvases can never push the layout wider */
+html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior: none; }
+#viewer { touch-action: pan-y; }
+#map, #timeline { max-width: 100%; }
+#timeline { width: 100%; min-width: 0; display: block; touch-action: none; }
+#transport > * { min-width: 0; }
+#map { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#tip { z-index: 9; }
+
+/* full screen: the map only (top bar and side panels away); the transport bar stays so the replay can be driven */
+body.immersive #topbar, body.immersive #right { display: none; }
+body.immersive #viewer { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+body.immersive #transport { padding-bottom: max(6px, env(safe-area-inset-bottom)); }
+#btnFull { min-width: 38px; font-size: 18px; line-height: 1; padding: 4px 10px; }
+@media (max-width: 800px) { body.immersive #transport { gap: 4px 6px; } body.immersive #timeline { height: 40px; } body.immersive .drawer { bottom: 70px; } }

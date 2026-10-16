@@ -12,4 +12,4 @@ export function hudK(cssW, cssH) {
   return Math.max(0.75, Math.floor(Math.min(cssW / 800, cssH / 600) * dpr() * 8) / 8);
 }
 /** The small HUD pieces (top bar, kill feed) scale like the whole layout. */
-export const hudKSmall = hudK;
+export const hudKSmall = (cssW, cssH) => hudK(cssW, cssH) * (S.hudScale > 0 || cssW >= 600 ? 1 : 1.8);   // on a phone the 800 x 600 fit makes the bar 100 px wide: read it at 1.8 x

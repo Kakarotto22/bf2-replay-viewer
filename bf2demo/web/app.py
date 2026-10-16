@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import ipaddress
 import json
 import os
@@ -117,6 +118,9 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
         response = send_file(path, mimetype="application/json", etag=True, conditional=True, max_age=0)
         response.headers["Content-Encoding"] = "gzip"
         response.headers["Cache-Control"] = "no-cache"
+        summary = store._read_summary(store.resolve(did))
+        if summary and summary.get("map"):                          # lets the page fetch the level's map while the (larger) document is still arriving
+            response.headers["X-Demo-Map"] = re.sub(r"[^A-Za-z0-9_-]", "", str(summary["map"]))[:60]
         return response
 
     @app.get("/api/demos/<did>/clip")
@@ -223,25 +227,73 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
             abort(404)
         return Response(item["png"], mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
 
+    small_map_lock = threading.Lock()
+
+    def _small_map(source: str, level: str) -> str:
+        """A 2048 px JPEG of the HD map (about 0.5 MB instead of 3 - 6 MB) for phones; built once, rebuilt when the source is newer."""
+        from PIL import Image
+        folder = os.path.join(store.cache_dir, "maps")
+        os.makedirs(folder, exist_ok=True)
+        target = os.path.join(folder, f"{level}.s2048.jpg")
+        with small_map_lock:                                     # one resize at a time: a 4096 px source is 48 MB decoded
+            if not os.path.isfile(target) or os.path.getmtime(target) < os.path.getmtime(source):
+                with Image.open(source) as img:
+                    img = img.convert("RGB")
+                    img.thumbnail((2048, 2048), Image.LANCZOS)
+                    img.save(target + ".tmp", "JPEG", quality=82, optimize=True, progressive=True)
+                os.replace(target + ".tmp", target)
+        return target
+
+    mini_jpg = {}
+
+    @app.get("/api/maps/<level>.jpg")
+    def backdrop_jpg(level):
+        """The minimap as a JPEG (about a third of the PNG's size): the first picture a phone waits for."""
+        item = _backdrop(level)
+        if item is None:
+            abort(404)
+        key = "".join(ch for ch in level if ch.isalnum() or ch in "_-").lower()
+        if key not in mini_jpg:
+            try:
+                from PIL import Image
+                out = io.BytesIO()
+                with Image.open(io.BytesIO(item["png"])) as img:
+                    img.convert("RGB").save(out, "JPEG", quality=88, optimize=True, progressive=True)
+                mini_jpg[key] = out.getvalue()
+            except (ImportError, OSError, ValueError):
+                mini_jpg[key] = None
+        if mini_jpg[key] is None:                                   # no Pillow: the PNG it is
+            return Response(item["png"], mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
+        return Response(mini_jpg[key], mimetype="image/jpeg", headers={"Cache-Control": "public, max-age=86400"})
+
     @app.get("/api/maps/<level>/hd.jpg")
     def backdrop_hd(level):
-        """The stitched high resolution terrain (built once from the game's colour tiles, then served from the cache folder)."""
+        """The stitched high resolution terrain (built once from the game's colour tiles, then served from the cache folder).
+        ``?size=2048`` gives the light version for phones. Maps hardly ever change, so browsers and Cloudflare may keep them for an hour."""
         level = "".join(ch for ch in level if ch.isalnum() or ch in "_-").lower()
+        small = request.args.get("size", type=int) == 2048
+        source, mime = None, "image/jpeg"
         for folder in map_folders:
-            for ext, mime in ((".jpg", "image/jpeg"), (".jpeg", "image/jpeg"), (".png", "image/png")):
+            for ext, kind in ((".jpg", "image/jpeg"), (".jpeg", "image/jpeg"), (".png", "image/png")):
                 custom = os.path.join(folder, level + ext)
-                if os.path.isfile(custom):
-                    return send_file(custom, mimetype=mime, etag=True, conditional=True, max_age=0)
-        folder = os.path.join(store.cache_dir, "maps")
-        path = os.path.join(folder, f"{level}.hd4.jpg")
-        if not os.path.isfile(path):
-            data = maps.hd_map(level)
-            if data is None:
-                abort(404)
-            os.makedirs(folder, exist_ok=True)
-            with open(path, "wb") as fh:
-                fh.write(data)
-        return send_file(path, mimetype="image/jpeg", etag=True, conditional=True, max_age=0)
+                if source is None and os.path.isfile(custom):
+                    source, mime = custom, kind
+        if source is None:
+            folder = os.path.join(store.cache_dir, "maps")
+            source = os.path.join(folder, f"{level}.hd4.jpg")
+            if not os.path.isfile(source):
+                data = maps.hd_map(level)
+                if data is None:
+                    abort(404)
+                os.makedirs(folder, exist_ok=True)
+                with open(source, "wb") as fh:
+                    fh.write(data)
+        if small:
+            try:
+                return send_file(_small_map(source, level), mimetype="image/jpeg", etag=True, conditional=True, max_age=3600)
+            except (ImportError, OSError, ValueError):
+                pass                                            # no Pillow / a broken image: the full map is still better than nothing
+        return send_file(source, mimetype=mime, etag=True, conditional=True, max_age=3600)
 
     def _backdrop(level):
         """The level's minimap and facts, built from the game once and kept in the store (``levels/<level>.png|json``)."""

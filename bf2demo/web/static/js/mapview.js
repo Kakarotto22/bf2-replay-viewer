@@ -11,7 +11,7 @@ const GAP_JUMP = 120;                         // metres: a trail never joins two
 
 export const V = { canvas: null, ctx: null, W: 0, H: 0, dpr: 1, worldSize: 2048, backdrop: null, hd: null };
 export const FRAME = { alive: { 1: 0, 2: 0 }, crews: 0 };       // counted over the whole map, not only the visible part
-export const PERF = { ms: 0, frames: 0, samples: [] };
+export const PERF = { ms: 0, frames: 0, samples: [], resizes: 0 };
 
 // hit targets of the last frame (parallel arrays: no allocation per frame)
 const HIT = { n: 0, x: new Float32Array(4096), y: new Float32Array(4096), r: new Float32Array(4096), tr: new Array(4096) };
@@ -19,22 +19,28 @@ const pos = { x: 0, z: 0, h: -1, gap: false };
 let heatCanvas = null, heatKey = "";
 
 export function initMap(canvas) { V.canvas = canvas; V.ctx = canvas.getContext("2d"); }
-export function setBackdrop(image, worldSize) { V.backdrop = image; V.hd = null; V.hdLevel = null; V.worldSize = worldSize; heatKey = ""; }
+export function setBackdrop(image, worldSize) { V.backdrop = image; V.hd = null; V.hdLevel = null; V.hdFull = false; V.worldSize = worldSize; heatKey = ""; }
 
 /** A phone: its 4096 px HD terrain (3 - 6 MB, about 64 MB decoded) is not loaded until the user asks for the detailed map. */
 export const smallDevice = () => Math.min(screen.width, screen.height) < 600 || (navigator.deviceMemory || 8) <= 4;
-/** Fetch the high resolution terrain of `level` once (404 for levels without colour tiles: the minimap stays). */
-export function loadHd(level) {
-  if (V.hdLevel === level) return;
-  V.hdLevel = level;
+/**
+ * Fetch the high resolution terrain of `level` (404 for levels without one: the minimap stays). A phone gets the 2048 px version (about 0.5 MB, drawn
+ * as soon as it arrives over the minimap) and the full 4096 px one only after the user zooms in far.
+ */
+export function loadHd(level, full = !smallDevice()) {
+  if (V.hdLevel === level && (V.hdFull || !full)) return;
+  V.hdLevel = level; V.hdFull = full;
   const hd = new Image();
-  hd.onload = () => { if (V.hdLevel === level) { V.hd = hd; invalidate(); } };
-  hd.src = "/api/maps/" + level + "/hd.jpg";
+  hd.onload = () => { if (V.hdLevel === level && V.hdFull === full) { V.hd = hd; invalidate(); } };
+  hd.src = "/api/maps/" + level + "/hd.jpg" + (full ? "" : "?size=2048");
 }
 
 export function resizeMap(w, h) {
   V.dpr = window.devicePixelRatio || 1; V.W = w; V.H = h;
-  V.canvas.width = Math.round(w * V.dpr); V.canvas.height = Math.round(h * V.dpr);
+  const cw = Math.min(8192, Math.max(1, Math.round(w * V.dpr))), ch = Math.min(8192, Math.max(1, Math.round(h * V.dpr)));
+  PERF.resizes++;
+  if (V.canvas.width !== cw) V.canvas.width = cw;                   // assigning the size clears the canvas and reallocates it: only when it changed
+  if (V.canvas.height !== ch) V.canvas.height = ch;
   invalidate();
 }
 const scaleK = () => (Math.min(V.W, V.H) / V.worldSize) * S.view.zoom;
@@ -45,6 +51,7 @@ export const s2w = (sx, sy) => { const k = scaleK(); return [S.view.cx + (sx - V
 export function zoomAt(sx, sy, factor) {
   const before = s2w(sx, sy);
   S.view.zoom = clamp(S.view.zoom * factor, 0.6, 60);
+  if (S.view.zoom > 2.5 && V.hdLevel && !V.hdFull && S.layers.hd) loadHd(V.hdLevel, true);            // zoomed in on a phone: now the sharp full map is worth its size
   const after = s2w(sx, sy);
   S.view.cx += before[0] - after[0]; S.view.cz += before[1] - after[1];
   invalidate();
@@ -376,10 +383,10 @@ function fallbackTri(x, y, s, col, h, alpha) {
 }
 
 /** Nearest unit under a screen point (hit targets of the last frame), or null. */
-export function pick(mx, my) {
+export function pick(mx, my, minRadius = 9) {          // a finger needs a bigger target than a mouse pointer
   let best = null, bd = Infinity;
   for (let i = 0; i < HIT.n; i++) {
-    const d = (HIT.x[i] - mx) ** 2 + (HIT.y[i] - my) ** 2, r = Math.max(HIT.r[i], 9);
+    const d = (HIT.x[i] - mx) ** 2 + (HIT.y[i] - my) ** 2, r = Math.max(HIT.r[i], minRadius);
     if (d <= r * r && d < bd) { bd = d; best = HIT.tr[i]; }
   }
   return best;
