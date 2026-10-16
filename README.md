@@ -2,14 +2,68 @@
 
 **Read, analyse and replay Battlefield 2 recordings (`.bf2demo`) - in a terminal or in your browser, on a PC or a phone.**
 
-`python` parser built by reverse engineering the game's own programs (no value is guessed) + a web viewer that draws the match on the game's
-own minimap, with the kill feed, scoreboard, tickets, flags, vehicles, squads, scene clips (experimental) for the game's own replay player, and an English / Arabic UI.
+A Python parser built by reverse engineering the game's own programs (no value is guessed) and a web viewer that draws the match on the game's own
+minimap: soldiers, vehicles, flags, kill feed, tickets, scoreboard, squads, and an English / Arabic interface.
 
-> **Unofficial fan project** - not affiliated with or endorsed by EA or DICE. **No game content is included**: the viewer reads the icons,
-> fonts and maps from *your own copy* of Battlefield 2 (see [Getting started](docs/GETTING_STARTED.md)). MIT license. See
-> [NOTICE.md](NOTICE.md), [CREDITS.md](CREDITS.md). Support the project: [Telegram @Thanks_Telegram](https://t.me/Thanks_Telegram).
+> **Unofficial fan project** - not affiliated with or endorsed by EA or DICE. **No game content is included**: the viewer reads the icons, fonts and
+> maps from *your own copy* of Battlefield 2. MIT license. See [NOTICE.md](NOTICE.md) and [CREDITS.md](CREDITS.md).
+
+<p align="center"><img src="docs/img/viewer-desktop.png" alt="The viewer: the game's minimap, units, kill feed, tickets and flags, with the log on the right" width="92%"></p>
+
+**Contents:** [Features](#features) · [Quick start](#quick-start) · [Documentation](#documentation) · [Technical reference](#technical-reference-the-bf2demo-parser) · [Support](#support) · [Thanks](#thanks) · [Legal](#legal)
 
 Topics: `battlefield-2` `bf2` `bf2demo` `replay-viewer` `demo-parser` `refractor-2` `reverse-engineering` `game-replay` `python` `flask`
+
+## Features
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <b>Replay on the real map</b><br>
+      Play, pause, seek and change the speed (5 % to 6000 %). Soldiers turn where they aim, crewed vehicles take their team colour, flags change owner,
+      strikes and the UAV are drawn as the game draws them. Follow a player, filter by team, kit or squad, find "moments" (who killed whom, in what).
+    </td>
+    <td width="50%" valign="top">
+      <b>The game's own HUD</b><br>
+      Kill feed in the game's font and colours, the top bar with time, tickets and flag bars (a bleeding counter pulses), and the live scoreboard
+      (<kbd>Tab</kbd>) in the game's layout with kit, rank, score, kills and deaths at any moment.
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/img/scoreboard.png" alt="The live scoreboard (Tab) in the game's own layout"></td>
+    <td align="center"><img src="docs/img/library.png" alt="The library of recordings"></td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <b>Terminal tools</b><br>
+      A readable report (<code>bf2demo FILE</code>), the kill feed, the scoreboard, JSON export, movement tracks, and <code>--clip</code> to cut a scene as a
+      new <code>.bf2demo</code> (experimental in the game's replay player).
+    </td>
+    <td valign="top">
+      <b>A library of recordings</b><br>
+      Search by map or server, sort by players, kills or length. Each recording is parsed once in the background and cached.
+    </td>
+  </tr>
+</table>
+
+### On a phone
+
+The layout switches by itself under 800 px: the map on top, the panels below, pinch to zoom, tap a unit for its name, right-to-left for Arabic.
+
+<p align="center">
+  <img src="docs/img/viewer-phone.png" alt="Phone layout: map on top, panels below" width="30%">
+  &nbsp;&nbsp;
+  <img src="docs/img/viewer-phone-ar.png" alt="The same in Arabic (right to left)" width="30%">
+</p>
+
+### Without the game installed
+
+The viewer works without the game too (a grid sized to the recorded positions and plain shapes instead of the game's artwork):
+
+<p align="center"><img src="docs/img/noassets-desktop.png" alt="Artwork-free mode" width="70%"></p>
+
+*The other pictures were taken with the author's own copy of the game installed: the map, icons and HUD are the game's, shown to illustrate the tool.
+How they are made, and how to get the same look on your machine: [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md).*
 
 ## Quick start
 
@@ -23,27 +77,20 @@ bf2view --demos path/to/recordings --port 8080     # then open http://127.0.0.1:
 ```
 
 * **Icons, fonts and the real minimap** come from your own Battlefield 2 install (found automatically in `Program Files (x86)\EA Games\Battlefield 2`,
-  or set `BF2_GAME_ROOT`). Without one the viewer still works: a grid and plain shapes instead of artwork. How: [Getting started](docs/GETTING_STARTED.md#2-fetch-the-game-artwork-assets).
-* **Phone friendly**: the side panels move under the map, pinch to zoom, tap a unit for details.
+  or set `BF2_GAME_ROOT`). How: [Getting started, section 2](docs/GETTING_STARTED.md#2-fetch-the-game-artwork-assets).
 * **Put it on a server** (Linux, Caddy / nginx, systemd): [deploy/README.md](deploy/README.md).
-* Guides: [Getting started](docs/GETTING_STARTED.md) | [البدء السريع](docs/GETTING_STARTED.ar.md) | [Screenshots how-to](docs/SCREENSHOTS.md) | [Parser user guide](docs/USAGE.en.md) | [دليل المحلل](docs/USAGE.ar.md).
 
-<p align="center"><img src="docs/img/viewer-desktop.png" alt="The viewer: the game's minimap, units, kill feed, tickets and flags, with the log on the right" width="92%"></p>
+## Documentation
 
-<p align="center">
-  <img src="docs/img/scoreboard.png" alt="The live scoreboard (Tab) in the game's own layout" width="45%">
-  <img src="docs/img/library.png" alt="The library of recordings and the support card" width="45%">
-</p>
-
-<p align="center">
-  <img src="docs/img/viewer-phone.png" alt="Phone layout: map on top, panels below" width="21%">
-  <img src="docs/img/viewer-phone-ar.png" alt="The same in Arabic (right to left)" width="21%">
-  <img src="docs/img/support-dialog.png" alt="The support dialog with a QR code" width="30%">
-  <img src="docs/img/noassets-desktop.png" alt="Without the game installed: grid and plain shapes" width="30%">
-</p>
-
-*The pictures were taken with the author's own copy of the game installed (the map, icons and HUD are the game's, shown to illustrate the tool);
-the last one shows the artwork-free mode. How they are made, and how to get the same look on your machine: [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md).*
+| guide | for |
+|---|---|
+| [Getting started](docs/GETTING_STARTED.md) / [البدء السريع](docs/GETTING_STARTED.ar.md) | install, recordings, fetching the game's assets, running the viewer, troubleshooting |
+| [Parser user guide](docs/USAGE.en.md) / [دليل المحلل](docs/USAGE.ar.md) | every report, export and option of the `bf2demo` command |
+| [Screenshots how-to](docs/SCREENSHOTS.md) | how the pictures are made, with and without the game's artwork |
+| [deploy/README.md](deploy/README.md) | hosting the viewer on your own server |
+| [DATA.md](DATA.md) | everything a recording contains, and what it never can |
+| [docs/REVERSE_ENGINEERING_NOTES.md](docs/REVERSE_ENGINEERING_NOTES.md) | verified wire-format facts and how they were checked |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | rules for contributions |
 
 ---
 
@@ -68,7 +115,7 @@ User guide: [English](docs/USAGE.en.md) | [العربية](docs/USAGE.ar.md).
 `DATA.md` lists **everything a demo contains, and what it never can** (rebuild it with `python scripts/build_data_doc.py > DATA.md`).
 Time is shown as `mm:ss` since the first simulation tick; the simulation runs at 30 ticks per second (`bf2demo/timeline.py`).
 
-## Web viewer
+### Web viewer
 
 Putting it on a server (Linux, Caddy / nginx, systemd, private beta behind a password): [deploy/README.md](deploy/README.md).
 
@@ -114,7 +161,7 @@ Clips (`--clip`, or the Clip drawer) put a welcome message into the server setti
 other bit of every packet is unchanged; `--no-signature` or the drawer's checkbox leaves it out). Whether the game shows it while replaying a recording is
 not verified.
 
-## Layout
+### Layout
 
 | module | what it does |
 |---|---|
@@ -131,7 +178,7 @@ not verified.
 | `export_con.py`, `export_static.py`, ... | `GamePlayObjects.con` / `StaticObjects.con` reconstruction |
 | `scripts/` | reverse-engineering helpers (`decomp.py` Ghidra, `asm_fn.py`, `event_asm.py`, `field_owners.py`, `bit_coverage.py`) |
 
-## Extending
+### Extending
 
 * **A new event layout:** write `def _reader(bs): return {...}` and call `events.register_event(eid, "Name", _reader)`
   (existing ones live in the `_READERS` table of `events.py`). Check it with `scripts/bit_coverage.py DEMO` (must stay 100 %).
@@ -142,7 +189,7 @@ not verified.
 
 Tests: `python -m unittest discover -s tests -t .` (about 4 minutes; each module is also runnable alone).
 
-## JSON format 2
+### JSON format 2
 
 `--export-json` documents are `bf2demo-json/2`. Compared with `/1`: new keys `server_settings` and `map_info`; renamed event fields
 `CreatePlayer.field_d`/`unk_34` -> `spawn_group`/`reserved`, `MissileInit.unk_f`/`flag` -> `weapon_slot`/`from_soldier`,
@@ -153,20 +200,41 @@ Tests: `python -m unittest discover -s tests -t .` (about 4 minutes; each module
 
 ## Support
 
-This is a free, spare-time project: reverse engineering a game format and a replay viewer. If it is useful to you, a donation helps to keep the
-demo server running and the work going. Donations are for the project's development and hosting costs; they buy no rights to the game or its content.
+This is a free, spare-time project: reverse engineering a game format and building a replay viewer. If it is useful to you, a donation helps to
+keep the demo server running and the work going. Donations are for development and hosting costs; they buy no rights to the game or its content.
 
-* Telegram: [@Thanks_Telegram](https://t.me/Thanks_Telegram) - write to me for the donation details, bug reports or recordings you want to see supported.
-* The hosted viewer shows the same button with a copy button for each wallet (`BF2VIEW_DONATE_TELEGRAM` and `BF2VIEW_DONATE_FILE`, see `deploy/donate.example.json`).
-* Free ways to help: star the repository, report a recording that does not decode, add a verified field name.
+**Telegram:** [@Thanks_Telegram](https://t.me/Thanks_Telegram) - for donation questions, bug reports, or recordings you want to see supported.
+
+### Wallets and payment links
+
+| Method | Network | Address / link |
+|---|---|---|
+| USDT | TRC20 | `TSeNTA4DP8kJkYzFewPR1ZyxsaVrEDn9cX` |
+| USDT | BEP20 | `0x9F553AE605a58cE748d625bF9571ADf4Fbb8A038` |
+| USDT | POLYGON | `0x9F553AE605a58cE748d625bF9571ADf4Fbb8A038` |
+| USDT | TON | `EQBKk3CMgQUdhAC1XV4m2Ou_H-sWmSp3ayr2G5gHTCtsaMMx` |
+| Bitcoin | BTC | `bc1qjud2a9hwz3l25vmuk5ky30eps9wavkxzg4pknz` |
+| Litecoin | LTC | `LNcxFVLTSRmeKCjuMw4CKCFbXrGofoBnCt` |
+
+*Copy the address with care and send on the network shown: funds sent on a wrong network are lost. Send a small test amount first.*
+
+<p align="center"><img src="docs/img/support-dialog.png" alt="The viewer's Support dialog: every wallet with a copy button and a QR code" width="62%"></p>
+
+*The viewer shows the same list in its **Support** dialog: every wallet has a copy button and a QR code. A server reads it from `donate.json`
+(see `deploy/donate.example.json`; addresses are checked against their network when the server starts).*
+
+Free ways to help: star the repository, report a recording that does not decode, add a verified field name.
 
 ## Thanks
 
-**[BF2Rangers](https://bf2rangers.wixsite.com/site)** (community and server, whose long rounds tested the decoder),
-**[kr4uzi/gamespy-emulator](https://github.com/kr4uzi/gamespy-emulator)**, **[Moxnatiy/OpenBattlefield2](https://github.com/Moxnatiy/OpenBattlefield2)**,
-**[matthias-hoste/Refractor-2-BitStream-Emulator](https://github.com/matthias-hoste/Refractor-2-BitStream-Emulator)** and **aluigi** (BF2Loop),
-the **BF2 technical reference** (darkstormstudios), the author of the **High Definition Minimap** pack, **2F4Y.com**, and the teams behind Ghidra, Flask and
-Pillow. Full list and licenses: [CREDITS.md](CREDITS.md).
+* **[BF2Rangers](https://bf2rangers.wixsite.com/site)** - the community and server whose long, crowded rounds tested the decoder.
+* **[kr4uzi/gamespy-emulator](https://github.com/kr4uzi/gamespy-emulator)** - a GameSpy emulator with native Battlefield 2 support.
+* **[Moxnatiy / OpenBattlefield2](https://github.com/Moxnatiy/OpenBattlefield2)** and **[matthias-hoste / Refractor-2-BitStream-Emulator](https://github.com/matthias-hoste/Refractor-2-BitStream-Emulator)**
+  (and **aluigi**, BF2Loop) - independent reverse-engineering work that confirmed our decoders.
+* The **BF2 technical reference** (darkstormstudios), the author of the **High Definition Minimap** pack, **2F4Y.com**, and the teams behind
+  Ghidra, Flask, Pillow and qrcode-generator.
+
+Full list and licenses: [CREDITS.md](CREDITS.md).
 
 ## Legal
 

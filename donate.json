@@ -1,4 +1,41 @@
 {
   "telegram": "@Thanks_Telegram",
-  "methods": []
+  "methods": [
+    {
+      "kind": "crypto",
+      "label": "USDT",
+      "network": "TRC20",
+      "address": "TSeNTA4DP8kJkYzFewPR1ZyxsaVrEDn9cX"
+    },
+    {
+      "kind": "crypto",
+      "label": "USDT",
+      "network": "BEP20",
+      "address": "0x9F553AE605a58cE748d625bF9571ADf4Fbb8A038"
+    },
+    {
+      "kind": "crypto",
+      "label": "USDT",
+      "network": "POLYGON",
+      "address": "0x9F553AE605a58cE748d625bF9571ADf4Fbb8A038"
+    },
+    {
+      "kind": "crypto",
+      "label": "USDT",
+      "network": "TON",
+      "address": "EQBKk3CMgQUdhAC1XV4m2Ou_H-sWmSp3ayr2G5gHTCtsaMMx"
+    },
+    {
+      "kind": "crypto",
+      "label": "Bitcoin",
+      "network": "BTC",
+      "address": "bc1qjud2a9hwz3l25vmuk5ky30eps9wavkxzg4pknz"
+    },
+    {
+      "kind": "crypto",
+      "label": "Litecoin",
+      "network": "LTC",
+      "address": "LNcxFVLTSRmeKCjuMw4CKCFbXrGofoBnCt"
+    }
+  ]
 }

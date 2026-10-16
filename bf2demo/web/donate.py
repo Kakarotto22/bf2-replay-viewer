@@ -13,6 +13,8 @@ network (when the network is one we know) and a link must be ``https``. A mistak
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import os
 import re
@@ -28,6 +30,62 @@ FORMATS = {
     "LTC": re.compile(r"(ltc1[ac-hj-np-z02-9]{11,87}|[LM3][%s]{25,34})" % BASE58),
     "SOL": re.compile(r"[%s]{32,44}" % BASE58),
 }
+FORMATS["TON"] = re.compile(r"[A-Za-z0-9_-]{48}")
+
+
+def _base58check(address: str) -> Optional[bytes]:
+    """The payload (version byte + hash) of a Base58Check address, or ``None`` when the checksum is wrong."""
+    number = 0
+    for char in address:
+        number = number * 58 + BASE58.index(char)
+    raw = b"\x00" * (len(address) - len(address.lstrip("1"))) + number.to_bytes((number.bit_length() + 7) // 8, "big")
+    body, check = raw[:-4], raw[-4:]
+    return body if hashlib.sha256(hashlib.sha256(body).digest()).digest()[:4] == check else None
+
+
+def _bech32_ok(address: str) -> bool:
+    charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+    hrp, _, data = address.lower().rpartition("1")
+    values = [charset.find(c) for c in data]
+    if not hrp or min(values, default=-1) < 0:
+        return False
+    check = 1
+    for value in [ord(c) >> 5 for c in hrp] + [0] + [ord(c) & 31 for c in hrp] + values:
+        top = check >> 25
+        check = (check & 0x1FFFFFF) << 5 ^ value
+        for i, generator in enumerate((0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3)):
+            check ^= generator if (top >> i) & 1 else 0
+    return check in (1, 0x2BC830A3)              # bech32 / bech32m
+
+
+def _ton_ok(address: str) -> bool:
+    try:
+        raw = base64.urlsafe_b64decode(address)
+    except ValueError:
+        return False
+    crc = 0
+    for byte in raw[:34]:
+        crc ^= byte << 8
+        for _ in range(8):
+            crc = ((crc << 1) ^ 0x1021) & 0xFFFF if crc & 0x8000 else (crc << 1) & 0xFFFF
+    return len(raw) == 36 and crc == int.from_bytes(raw[34:], "big")
+
+
+def _tron_ok(address: str) -> bool:
+    body = _base58check(address)
+    return body is not None and len(body) == 21 and body[0] == 0x41
+
+
+def _btc_ok(address: str) -> bool:
+    return _bech32_ok(address) if address.lower().startswith("bc1") else _base58check(address) is not None
+
+
+def _ltc_ok(address: str) -> bool:
+    return _bech32_ok(address) if address.lower().startswith("ltc1") else _base58check(address) is not None
+
+
+# a typo almost always breaks the checksum: these are verified, not only matched against the character set
+CHECKSUMS = {"TRON": _tron_ok, "TRC20": _tron_ok, "BTC": _btc_ok, "LTC": _ltc_ok, "TON": _ton_ok}
 KINDS = ("crypto", "link", "text")
 CONTROL = re.compile(r"[\x00-\x1f\x7f<>\"'`]")           # nothing that could break out of a page or a log line
 
@@ -73,7 +131,8 @@ def method(entry: dict) -> dict:
         address = _text(entry, "address", 120, required=True)
         network = _text(entry, "network", 24)
         shape = FORMATS.get(network.upper())
-        if shape is not None and not shape.fullmatch(address):
+        checksum = CHECKSUMS.get(network.upper())
+        if (shape is not None and not shape.fullmatch(address)) or (checksum is not None and not checksum(address)):
             raise ValueError(f"payment method {label!r}: {address!r} is not a valid {network} address (check every character)")
         if network:
             out["network"] = network

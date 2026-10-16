@@ -35,9 +35,17 @@ class DonateTest(unittest.TestCase):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 donate.build(None, self.file({"methods": [bad]}))
 
+    def test_a_typo_breaks_the_checksum_and_is_refused(self):
+        good = {"TRC20": TRON, "BTC": BTC, "LTC": "LNcxFVLTSRmeKCjuMw4CKCFbXrGofoBnCt", "TON": "EQBKk3CMgQUdhAC1XV4m2Ou_H-sWmSp3ayr2G5gHTCtsaMMx"}
+        for network, address in good.items():
+            donate.method({"label": "x", "network": network, "address": address})                       # the real address passes
+            typo = address[:-2] + ("b" if address[-2] != "b" else "c") + address[-1]                   # one character changed in the middle of the tail
+            with self.subTest(network=network), self.assertRaises(ValueError):
+                donate.method({"label": "x", "network": network, "address": typo})
+
     def test_unknown_networks_are_kept_as_they_are(self):
-        got = donate.build(None, self.file({"methods": [{"label": "TON", "network": "TON", "address": "UQ" + "a" * 46}]}))
-        self.assertEqual(got["methods"][0]["network"], "TON")
+        got = donate.build(None, self.file({"methods": [{"label": "XYZ", "network": "XYZCOIN", "address": "xyz-" + "a" * 46}]}))
+        self.assertEqual(got["methods"][0]["network"], "XYZCOIN")
 
     def test_the_page_gets_them_from_the_api(self):
         path = self.file({"telegram": "@my_name", "methods": [{"label": "USDT", "network": "TRC20", "address": TRON}]})
