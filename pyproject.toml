@@ -19,6 +19,11 @@ classifiers = [
 ]
 dependencies = []                     # the parser needs nothing but the standard library
 
+[project.urls]
+Homepage = "https://github.com/Kakarotto22/bf2-replay-viewer"
+Demo = "https://bf2viewer.syrians.dev"
+Issues = "https://github.com/Kakarotto22/bf2-replay-viewer/issues"
+
 [project.optional-dependencies]
 web = ["flask>=3.0", "pillow>=10.0"]
 server = ["flask>=3.0", "pillow>=10.0", "gunicorn>=21.2"]
