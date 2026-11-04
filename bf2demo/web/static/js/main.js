@@ -14,9 +14,10 @@ import { buildPanels, resetKillFeed, renderBoard, renderPlayerPanel, showTab, up
 import { S, invalidate, resetFilters, takeDirty } from "./state.js";
 import { cpDisplayName, cpTokens, friendlyText, isNoise, vehicleLabel } from "./text.js";
 import { dropTimelineCache, drawTimeline, initTimeline, resizeTimeline } from "./timeline.js";
-import { $, TPS, api, clamp, esc, fmtTime, prettyMap } from "./util.js";
+import { $, TPS, api, clamp, esc, fmtBytes, fmtTime, prettyMap, upload } from "./util.js";
 
 let raf = 0, lastHud = 0, lastAnim = 0, lastPulse = 0, hudPending = true, hoverTrack = null, routeToken = 0;
+let maxUpload = 0;                // largest upload the server takes (from /api/game): bigger files are refused before they are sent
 const pos = { x: 0, z: 0, h: -1, gap: false };
 
 // ---------------------------------------------------------------------------------------------------- playback / clock
@@ -56,6 +57,7 @@ async function route() {
   stop(); if (document.body.classList.contains("immersive")) setImmersive(false);
   if (!m) { $("viewer").hidden = true; $("library").hidden = false; $("crumb").textContent = ""; await loadLibrary(); return; }
   $("library").hidden = true; $("viewer").hidden = false; showLoading(T("loading")); warmAssets();       // tables, fonts and icons load while the recording downloads
+  const started = Date.now();
   try {
     let r;
     for (;;) {
@@ -63,14 +65,26 @@ async function route() {
         const name = h.get("X-Demo-Map"); if (name && !earlyMap) earlyMap = { map: name, promise: loadBackdrop(name) };
       });
       if (r.status !== 202) break;
-      if (r.json.status === "error") throw new Error(r.json.error || "parse error");
-      $("loadingText").textContent = T("parsing_long");
+      if (r.json.status === "error") throw { code: "parse_" + (r.json.reason || "unreadable") };
+      $("loadingText").textContent = `${T("parsing_long")} (${fmtTime((Date.now() - started) / 1000)})`;
       await new Promise((ok) => setTimeout(ok, 1500));
       if (token !== routeToken) return;
     }
     await openDemo(r.json, new URLSearchParams(m[2] || ""), m[1]);
     hideLoading();
-  } catch (e) { hideLoading(); alert(e.message); location.hash = "#/"; }
+  } catch (e) { hideLoading(); alert(errorText(e)); location.hash = "#/"; }
+}
+/** What a visitor reads when something fails: a translated sentence chosen by the error's code, never a URL, a status line or a stack. */
+function errorText(e) {
+  const code = (e && e.code) || "", body = (e && e.body) || {};
+  if (code === "too_large") return T("err_too_large").replace("{mb}", Math.floor((body.max_upload || maxUpload || 0) / 1048576) || "?");
+  if (code === "rate_limited") return T("err_rate_limited").replace("{s}", body.retry_after || 60);
+  const key = { not_a_demo: "err_not_a_demo", network: "err_network", http_404: "err_not_found", http_403: "err_forbidden",
+                parse_unreadable: "err_not_a_demo", parse_too_large: "err_parse_too_large", parse_timeout: "err_parse_timeout", parse_server_error: "err_generic" }[code];
+  if (key) return T(key);
+  if (e && e.status === 413) return T("err_too_large").replace("{mb}", Math.floor(maxUpload / 1048576) || "?");   // the proxy's own 413 page
+  if (e && e.status === 429) return T("err_rate_limited").replace("{s}", 60);
+  return T("err_generic");
 }
 const showLoading = (text) => { $("loading").hidden = false; $("loadingText").textContent = text; };
 const hideLoading = () => { $("loading").hidden = true; };
@@ -292,6 +306,7 @@ $("langBtn").onclick = () => {
 };
 // the upload button starts hidden (no flash on a server without uploads) and is shown when the server accepts uploads
 api("/api/game").then((r) => {
+  maxUpload = r.json.max_upload || 0;
   if (r.json.upload !== false) document.querySelector('label[for="uploadInput"]').style.display = "";
   if (r.json.donate && (r.json.donate.telegram || (r.json.donate.methods || []).length)) showDonate(r.json.donate);
   if (r.json.repo) { for (const id of ["repoBtn", "repoLink"]) { $(id).href = r.json.repo; $(id).hidden = false; } }
@@ -348,10 +363,17 @@ async function copyText(text, button, key) {
   try { await navigator.clipboard.writeText(text); } catch (e) { return; }
   button.textContent = T("donate_copied"); setTimeout(() => { button.textContent = T(key); }, 1500);
 }
-initLibrary(async (fd) => {
-  showLoading(T("loading"));
-  try { const r = await api("/api/upload", { method: "POST", body: fd }); hideLoading(); location.hash = "#/demo/" + r.json.id; }
-  catch (e) { hideLoading(); alert(e.message); }
+initLibrary(async (file) => {
+  if (!/\.bf2demo$/i.test(file.name)) { alert(errorText({ code: "not_a_demo" })); return; }
+  if (maxUpload && file.size > maxUpload) { alert(errorText({ code: "too_large", body: { max_upload: maxUpload } })); return; }   // before sending 100 MB for nothing
+  const fd = new FormData(); fd.append("file", file);
+  showLoading(T("uploading") + " 0%");
+  try {
+    const r = await upload("/api/upload", fd, (sent, total) => {
+      $("loadingText").textContent = sent < total ? `${T("uploading")} ${Math.floor((sent / total) * 100)}% (${fmtBytes(sent)} / ${fmtBytes(total)})` : T("upload_checking");
+    });
+    hideLoading(); location.hash = "#/demo/" + r.json.id;
+  } catch (e) { hideLoading(); alert(errorText(e)); }
 });
 initMap($("map")); initMapInput(); initKeys(); initPanels(callbacks); initMoments(callbacks); initScoreboard(callbacks);
 initTimeline((t) => seek(t));

@@ -12,10 +12,12 @@ import threading
 from typing import List, Optional
 
 from flask import Flask, Response, abort, jsonify, request, send_file, send_from_directory
+from werkzeug.exceptions import HTTPException
 
 from . import donate as donations, maps
 from .limits import RateLimit
 from .assets import GameAssets
+from ..reader import looks_like_demo
 from .store import Store, demo_id
 
 STATIC = os.path.join(os.path.dirname(__file__), "static")
@@ -24,11 +26,16 @@ STATIC = os.path.join(os.path.dirname(__file__), "static")
 CSP = ("default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; "
        "object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
 MAX_UPLOAD = 400 * 1024 * 1024
+# the only error texts a visitor ever sees: short, the same on every server, never a path, a version, an exception or a stack trace
+ERROR_TEXTS = {400: "Bad request.", 403: "Not allowed on this server.", 404: "Not found.", 405: "Method not allowed.",
+               413: "The file is too large.", 429: "Too many requests, try again later.", 500: "Something went wrong on the server.",
+               503: "The server is busy, try again later."}
 
 
 def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders: Optional[List[str]] = None, allow_upload: bool = True,
                max_parse: int = 2, max_upload: int = MAX_UPLOAD, donate_telegram: Optional[str] = None,
-               donate_file: Optional[object] = None, behind_proxy: bool = False, behind_cloudflare: bool = False, quota_mb: int = 0, list_uploads: bool = False, repo_url: str = "", clips_per_minute: int = 6, uploads_per_hour: int = 6) -> Flask:
+               donate_file: Optional[object] = None, behind_proxy: bool = False, behind_cloudflare: bool = False, quota_mb: int = 0, list_uploads: bool = False, repo_url: str = "", clips_per_minute: int = 6, uploads_per_hour: int = 6,
+               parse_timeout: float = 600, parse_memory_mb: int = 3072) -> Flask:
     """``allow_upload=False`` is the public setting: the library is whatever is in ``folders``. ``max_parse`` limits the recordings parsed at once.
     The support section shows ``donate_telegram`` and the payment methods of ``donate_file`` (:mod:`bf2demo.web.donate`); it is hidden while both are empty."""
     cache_dir = cache_dir or os.path.join(os.path.expanduser("~"), ".bf2demo-viewer-cache")
@@ -56,12 +63,13 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
     def too_many(limit):
         wait = limit.hit(visitor())
         if wait:
-            response = jsonify({"error": f"too many requests, try again in {wait} s"})
+            response = jsonify({"error": ERROR_TEXTS[429], "code": "rate_limited", "retry_after": wait})
             response.status_code = 429
             response.headers["Retry-After"] = str(wait)
             abort(response)
     app.config["MAX_CONTENT_LENGTH"] = max_upload
-    store = Store(folders, cache_dir, max_parse=max_parse, quota_mb=quota_mb, list_uploads=list_uploads)
+    store = Store(folders, cache_dir, max_parse=max_parse, quota_mb=quota_mb, list_uploads=list_uploads,
+                  parse_timeout=parse_timeout, parse_memory_mb=parse_memory_mb)
     threading.Thread(target=store.enforce_quota, daemon=True).start()          # tidy up at start (no-op without a quota)
     # high resolution maps made by the user (BF2 Editor mega map renders, downloaded packs): <level>.jpg / .png, they win over everything
     map_folders = [os.path.abspath(f) for f in (map_folders or [])] + [os.path.join(os.path.abspath(cache_dir), "hd_maps")]
@@ -71,6 +79,28 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
     game_store = os.path.join(os.path.abspath(cache_dir), "game")          # the viewer's own source: only what the page draws, built from the install
     assets = GameAssets(root, game_store)
     level_dir = os.path.join(game_store, "levels")
+
+    @app.errorhandler(HTTPException)
+    def http_error(exc):
+        """Every error is a small JSON document with a fixed text (Werkzeug's HTML pages named the URL and invited guesses)."""
+        if exc.response is not None and exc.response.mimetype == "application/json":
+            return exc.response                                     # already ours (429 with Retry-After)
+        code = exc.code or 500
+        body = {"error": ERROR_TEXTS.get(code, "Request failed."), "code": {413: "too_large"}.get(code, "http_%d" % code)}
+        if code == 413:
+            body["max_upload"] = max_upload
+        response = jsonify(body)
+        response.status_code = code
+        if code == 405 and exc.get_headers():
+            response.headers.extend([h for h in exc.get_headers() if h[0] == "Allow"])
+        return response
+
+    @app.errorhandler(Exception)
+    def server_error(exc):
+        app.logger.exception("unhandled error on %s %s", request.method, request.path)      # the details go to the server log only
+        response = jsonify({"error": ERROR_TEXTS[500], "code": "http_500"})
+        response.status_code = 500
+        return response
 
     @app.after_request
     def headers(response):
@@ -171,18 +201,37 @@ def create_app(folders: List[str], cache_dir: Optional[str] = None, map_folders:
         too_many(upload_limit)
         file = request.files.get("file")
         if file is None or not file.filename.lower().endswith(".bf2demo"):
-            abort(400, "expected a .bf2demo file")
+            return _bad_upload()
         # the client's name is only a hint: keep letters, digits and . _ - of its last path part, add a random suffix, never overwrite another file
         stem = re.sub(r"[^A-Za-z0-9._-]+", "_", re.split(r"[\\/]", file.filename)[-1][: -len(".bf2demo")]).strip("._")[:60] or "upload"
         path = os.path.join(store.upload_dir, f"{stem}_{secrets.token_hex(4)}.bf2demo")
-        file.save(path)
+        try:
+            file.save(path)
+        except OSError:
+            _remove(path)
+            raise
+        if os.path.getsize(path) == 0 or not looks_like_demo(path):      # junk never stays on the disk nor reaches a parser
+            _remove(path)
+            return _bad_upload()
         store.enforce_quota()                                  # the oldest upload goes when the quota is exceeded (never the published recordings)
         store.scan(max_age=0)
         return jsonify({"id": demo_id(path)})
 
+    def _bad_upload():
+        response = jsonify({"error": "This is not a BF2 recording (.bf2demo).", "code": "not_a_demo"})
+        response.status_code = 400
+        return response
+
+    def _remove(path):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+
     @app.get("/api/game")
     def game():
-        return jsonify({"installed": assets.tables() is not None, "upload": allow_upload, "donate": donate, "repo": repo})
+        return jsonify({"installed": assets.tables() is not None, "upload": allow_upload, "max_upload": max_upload if allow_upload else 0,
+                        "donate": donate, "repo": repo})
 
     @app.get("/api/hud/<path:icon>.png")
     def hud_icon(icon):

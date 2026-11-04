@@ -49,8 +49,8 @@ export function renderLibrary() {
 export function initLibrary(onUpload) {
   for (const id of ["libSearch", "libMap", "libHumans", "libSort"]) $(id).oninput = renderLibrary;
   $("uploadInput").onchange = async (ev) => {
-    const f = ev.target.files[0]; if (!f) return;
-    const fd = new FormData(); fd.append("file", f);
-    await onUpload(fd);
+    const f = ev.target.files[0]; ev.target.value = "";          // the same file can be picked again after an error
+    if (!f) return;
+    await onUpload(f);
   };
 }

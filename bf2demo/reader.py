@@ -143,6 +143,25 @@ def parse_stream(stream: bytes, recovered: bool = False) -> Demo:
     )
 
 
+def looks_like_demo(path: str) -> bool:
+    """Cheap check of an uploaded file (reads at most 64 KB): a Zlib stream whose start inflates to a plausible demo header."""
+    try:
+        with open(path, "rb") as handle:
+            head = handle.read(1 << 16)
+        start = zlib.decompressobj().decompress(head, 1 << 16)
+        offset = 4
+        for _ in range(3):
+            if len(start) < offset + 4:
+                return False
+            length = struct.unpack_from("<i", start, offset)[0]
+            if length < 0 or length > 4096 or offset + 4 + length > len(start):
+                return False
+            offset += 4 + length
+        return True
+    except (OSError, zlib.error):
+        return False
+
+
 def load_demo(path: str) -> Demo:
     """Load and parse a ``.bf2demo`` file from disk."""
     with open(path, "rb") as handle:

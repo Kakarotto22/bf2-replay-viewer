@@ -92,10 +92,48 @@ class WebSecurityTest(unittest.TestCase):
                 break
             import time
             time.sleep(0.05)
+        self.assertEqual(reply.get_json()["status"], "error")                                # the page is told, it does not wait forever
         text = reply.get_data(as_text=True)
         self.assertNotIn(self.tmp, text)
+        self.assertNotIn("ValueError", text)
         self.assertNotIn("broken.bf2demo", text)
         self.assertNotIn("Traceback", text)
+
+    def test_errors_are_small_json_without_server_details(self):
+        for method, path in (("get", "/nope"), ("get", "/api/demos/zzz"), ("post", "/api/demos/zzz/parse"), ("post", "/api/game"), ("post", "/api/upload")):
+            with self.subTest(path=path):
+                reply = getattr(self.client, method)(path)
+                self.assertGreaterEqual(reply.status_code, 400)
+                self.assertEqual(reply.mimetype, "application/json")
+                text = reply.get_data(as_text=True)
+                for leak in ("<html", "Traceback", "Werkzeug", "werkzeug", "Flask", self.tmp, "/srv", "requested URL"):
+                    self.assertNotIn(leak, text)
+                self.assertIn("error", reply.get_json())
+
+    def test_an_unexpected_exception_gives_a_generic_500(self):
+        app = create_app([self.demos], self.cache, donate_file=False)
+        app.config["STORE"].listing = lambda: (_ for _ in ()).throw(RuntimeError("secret detail " + self.tmp))
+        with self.assertLogs(app.logger, "ERROR"):
+            reply = app.test_client().get("/api/demos")
+        self.assertEqual(reply.status_code, 500)
+        self.assertNotIn("secret detail", reply.get_data(as_text=True))
+        self.assertNotIn("RuntimeError", reply.get_data(as_text=True))
+
+    def test_too_large_upload_is_a_json_413(self):
+        client = create_app([self.demos], self.cache, allow_upload=True, donate_file=False, max_upload=1024).test_client()
+        self.assertEqual(client.get("/api/game").get_json()["max_upload"], 1024)
+        reply = client.post("/api/upload", data={"file": (io.BytesIO(b"x" * 4096), "a.bf2demo")}, content_type="multipart/form-data")
+        self.assertEqual(reply.status_code, 413)
+        self.assertEqual(reply.get_json()["code"], "too_large")
+        self.assertEqual(os.listdir(os.path.join(self.cache, "uploads")), [])
+
+    def test_an_upload_that_is_not_a_recording_is_deleted(self):
+        for junk in (b"", b"junk" * 100, zlib.compress(bytes([255]) * 1000)):
+            with self.subTest(junk=junk[:8]):
+                reply = self.client.post("/api/upload", data={"file": (io.BytesIO(junk), "a.bf2demo")}, content_type="multipart/form-data")
+                self.assertEqual(reply.status_code, 400)
+                self.assertEqual(reply.get_json()["code"], "not_a_demo")
+        self.assertEqual(os.listdir(os.path.join(self.cache, "uploads")), [])
 
     def test_a_decompression_bomb_is_refused(self):
         old = reader.MAX_INFLATED

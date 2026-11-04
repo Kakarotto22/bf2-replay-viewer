@@ -11,6 +11,7 @@ import tempfile
 import unittest
 
 from bf2demo.web.app import create_app
+from bf2demo.web.store import Store
 
 from .common import sample_path
 
@@ -148,3 +149,63 @@ class QuotaTest(unittest.TestCase):
         self.assertFalse(os.path.exists(orphan))
         self.assertTrue(os.path.exists(published) and os.path.exists(keep_doc))                   # published recordings and their documents are never deleted
         self.assertEqual([i["name"] for i in store.listing()], ["keep_me.bf2demo"])               # uploads are not listed publicly
+
+class ParseIsolationTest(unittest.TestCase):
+    """The parse runs in a child process: its failures, time limit and memory never reach the web worker, and visitors see plain words only."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(lambda: shutil.rmtree(self.tmp, ignore_errors=True))
+        self.demos = os.path.join(self.tmp, "demos")
+        os.makedirs(self.demos)
+
+    def _wait(self, store, did):
+        import time
+        store.request(did)
+        for _ in range(400):
+            result = store.request(did)
+            if result["status"] in ("ready", "error"):
+                return result
+            time.sleep(0.05)
+        self.fail("parse did not finish")
+
+    def test_a_good_recording_parses_in_the_child(self):
+        shutil.copy(sample_path(SAMPLE), self.demos)
+        store = Store([self.demos], os.path.join(self.tmp, "cache"))
+        did = next(iter(store.scan()))
+        self.assertEqual(self._wait(store, did)["status"], "ready")
+        self.assertIsNotNone(store.cached_file(did))
+
+    def test_a_broken_recording_gives_a_plain_message(self):
+        with open(os.path.join(self.demos, "broken.bf2demo"), "wb") as fh:
+            fh.write(b"not a recording" * 100)
+        store = Store([self.demos], os.path.join(self.tmp, "cache"))
+        result = self._wait(store, next(iter(store.scan())))
+        self.assertEqual((result["status"], result["reason"]), ("error", "unreadable"))
+        self.assertNotIn("Error", result["error"])                    # no exception names
+        self.assertNotIn(self.tmp, result["error"])
+
+    def test_a_server_failure_is_not_blamed_on_the_file_and_is_retried(self):
+        from unittest import mock
+        shutil.copy(sample_path(SAMPLE), self.demos)
+        store = Store([self.demos], os.path.join(self.tmp, "cache"))
+        did = next(iter(store.scan()))
+        with mock.patch.object(sys, "executable", os.path.join(self.tmp, "no_such_python")), mock.patch("traceback.print_exc"):
+            result = self._wait(store, did)
+        self.assertEqual((result["status"], result["reason"]), ("error", "server_error"))
+        self.assertEqual(store.request(did)["status"], "error")      # the polling page sees the error (no endless "parsing") ...
+        store.retry_after = 0
+        self.assertEqual(self._wait(store, did)["status"], "ready")   # ... and a later visit parses again: not the file's fault
+
+    def test_a_parse_over_the_time_limit_is_killed_and_not_retried(self):
+        shutil.copy(sample_path(SAMPLE), self.demos)
+        store = Store([self.demos], os.path.join(self.tmp, "cache"), parse_timeout=0.01)
+        did = next(iter(store.scan()))
+        result = self._wait(store, did)
+        self.assertEqual((result["status"], result["reason"]), ("error", "timeout"))
+        self.assertEqual(store.request(did)["status"], "error")      # a costly failure is remembered, not started again on every visit
+        self.assertEqual([f for f in os.listdir(store.cache_dir) if f.endswith(".tmp")], [])
+
+
+if __name__ == "__main__":
+    unittest.main()

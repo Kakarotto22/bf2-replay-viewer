@@ -14,6 +14,8 @@ Everything comes from environment variables so the same code runs on a laptop an
 ``BF2VIEW_QUOTA_MB``  space for uploads + their parsed documents (e.g. 2500): the OLDEST upload is deleted when it is exceeded; published recordings are never deleted
 ``BF2VIEW_LIST_UPLOADS``  ``1`` shows uploaded recordings in the public library (default ``0``: reachable by their link only)
 ``BF2VIEW_CLIPS_PER_MIN`` / ``BF2VIEW_UPLOADS_PER_HOUR``  per address limits of the expensive endpoints (default 6 and 6)
+``BF2VIEW_PARSE_TIMEOUT``  seconds a recording may take to parse before its child process is killed (default 600, 0 = no limit)
+``BF2VIEW_PARSE_MEMORY_MB``  address space of the parse child process on Linux (default 3072, 0 = no cap): a bigger recording is refused
 ``BF2VIEW_DONATE_FILE``  JSON file with the payment methods (wallets, links), see ``deploy/donate.example.json``
 
 A ``bf2view.env`` file in the project folder overrides all of these (see ``_load_env_file``).
@@ -66,4 +68,6 @@ app = create_app(
     list_uploads=os.environ.get("BF2VIEW_LIST_UPLOADS", "0") == "1",
     clips_per_minute=int(os.environ.get("BF2VIEW_CLIPS_PER_MIN", "6")),
     uploads_per_hour=int(os.environ.get("BF2VIEW_UPLOADS_PER_HOUR", "6")),
+    parse_timeout=float(os.environ.get("BF2VIEW_PARSE_TIMEOUT", "600")),
+    parse_memory_mb=int(os.environ.get("BF2VIEW_PARSE_MEMORY_MB", "3072")),
 )

@@ -17,5 +17,13 @@ bf2.example.com {
 		-Server
 	}
 
-	reverse_proxy 127.0.0.1:18642
+	# uploads: a little above BF2VIEW_MAX_UPLOAD_MB, so the viewer answers a too large file with its own message
+	request_body {
+		max_size 100MB
+	}
+
+	reverse_proxy 127.0.0.1:18642 {
+		header_down -Via          # do not tell visitors which proxy runs here
+		header_down -Server
+	}
 }

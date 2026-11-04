@@ -39,7 +39,9 @@ def main(argv=None) -> int:
     app = create_app(args.demos, args.cache, args.maps, allow_upload=not args.no_upload, max_parse=args.max_parse,
                      donate_telegram=args.donate_telegram, donate_file=args.donate_file, behind_proxy=args.behind_proxy)
     if args.warm:
-        done = app.config["STORE"].warm()
+        store = app.config["STORE"]
+        store.parse_timeout, store.parse_memory_mb = 0, 0           # the owner's own recordings: no visitor limits
+        done = store.warm()
         print(f"{done} recording(s) parsed")
         return 0
     print(f"bf2demo viewer on http://{args.host}:{args.port}/")

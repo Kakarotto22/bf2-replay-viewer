@@ -28,9 +28,36 @@ export function histAt(hist, tick, dflt) {
   return r < 0 ? dflt : hist[r][1];
 }
 
+/** An error the page can show as it is: the server's code (translated by the caller) or the HTTP status, never a path or a raw reply. */
+export class ApiError extends Error {
+  constructor(status, body) {
+    super((body && body.error) || "HTTP " + status);
+    this.status = status; this.code = (body && body.code) || "http_" + status; this.body = body || {};
+  }
+}
+const jsonOrNull = async (r) => { try { return await r.json(); } catch (e) { return null; } };   // a proxy's HTML error page is not JSON
+
 export async function api(path, opts, onHeaders) {
   const r = await fetch(path, opts);
   if (onHeaders) onHeaders(r.headers);                          // available before the body has arrived
-  if (!r.ok && r.status !== 202) throw new Error(path + " -> " + r.status);
+  if (!r.ok && r.status !== 202) throw new ApiError(r.status, await jsonOrNull(r));
   return { status: r.status, json: await r.json() };
+}
+
+/** POST a form with upload progress (fetch has none): ``onProgress(sentBytes, totalBytes)``. Resolves like ``api``. */
+export function upload(path, form, onProgress) {
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    x.open("POST", path);
+    x.responseType = "text";
+    x.upload.onprogress = (e) => { if (e.lengthComputable && onProgress) onProgress(e.loaded, e.total); };
+    x.onload = () => {
+      let body = null; try { body = JSON.parse(x.responseText); } catch (e) { /* not JSON: a proxy or Cloudflare page */ }
+      if (x.status >= 200 && x.status < 300 && body) resolve({ status: x.status, json: body });
+      else reject(new ApiError(x.status, body));
+    };
+    x.onerror = () => reject(new ApiError(0, { code: "network" }));
+    x.ontimeout = x.onerror;
+    x.send(form);
+  });
 }
