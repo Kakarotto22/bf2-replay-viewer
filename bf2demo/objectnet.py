@@ -96,6 +96,10 @@ def decode_simple_object(bs: BitStream, ctx: SimpleObjectContext) -> SimpleObjec
     return SimpleObjectUpdate(mask, f, bs.bit_pos - start)
 
 
+#: field widths of the soldier record (``width_for`` of constants, computed once: the decoder runs about a million times per long round)
+_W4, _W2, _W5, _W16, _W256 = width_for(4), width_for(2), width_for(5), width_for(0x10), width_for(0x100)
+
+
 @dataclass
 class SoldierUpdate:
     """``SoldierNetworkable::setNetUpdate`` @ 0x08249860 (21-bit mask, not-StatePrecisionFull path)."""
@@ -121,8 +125,8 @@ def decode_soldier(bs: BitStream, weapon_bits: int = 4, ragdoll_bones: int = 3) 
         f["stance_8"] = bs.read_bits(8)                      # pfVar6[0x17] (scaled by the component at +0x3c)
         f["stance_flag"] = bs.read_bits(1) == 1              # pfVar6[0x18]
     if mask & 0x20:
-        f["pose"] = bs.read_bits(width_for(5))               # Soldier+0x1fc getPose (current stance)
-        f["requested_pose"] = bs.read_bits(width_for(5))     # Soldier+0x200 getRequestedPose
+        f["pose"] = bs.read_bits(_W5)                        # Soldier+0x1fc getPose (current stance)
+        f["requested_pose"] = bs.read_bits(_W5)              # Soldier+0x200 getRequestedPose
     if mask & 0x8000:
         # RagDoll::readCurrentState 0x08347030: 9 bits, bone 0 as three raw floats (its world position), then one
         # readCompressedVector2 per further enabled bone. Every soldier of the samples has exactly 3 further bones.
@@ -141,11 +145,13 @@ def decode_soldier(bs: BitStream, weapon_bits: int = 4, ragdoll_bones: int = 3) 
     for bit, name, span in ((0x2, "yaw", 360.0), (0x4, "pitch", 90.0), (0x8, "angle_c", 180.0), (0x10, "angle_d", 90.0)):
         if mask & bit:
             f[name] = (bs.read_bits(12) / 0xFFF * 2.0 - 1.0) * span
-    f["state_3"] = bs.read_bits(width_for(4))                # pfVar6[0x20]
-    f["state_2"] = bs.read_bits(width_for(2))                # pfVar6[0x21]
-    f["is_sky_diving"] = bs.read_bits(1) == 1                # Soldier::setIsSkyDiving
-    f["is_swimming"] = bs.read_bits(1) == 1                  # Soldier+0x2a0 getIsSwimming
-    f["flag_7f"] = bs.read_bits(1) == 1                      # Soldier+0x38c (no accessor; unresolved)
+    # five unconditional fields, read as ONE 8-bit field and split (LSB-first: the first field is in the low bits)
+    tail = bs.read_bits(_W4 + _W2 + 3)
+    f["state_3"] = tail & ((1 << _W4) - 1)                   # pfVar6[0x20], width_for(4)
+    f["state_2"] = tail >> _W4 & ((1 << _W2) - 1)            # pfVar6[0x21], width_for(2)
+    f["is_sky_diving"] = tail >> (_W4 + _W2) & 1 == 1        # Soldier::setIsSkyDiving
+    f["is_swimming"] = tail >> (_W4 + _W2 + 1) & 1 == 1      # Soldier+0x2a0 getIsSwimming
+    f["flag_7f"] = tail >> (_W4 + _W2 + 2) & 1 == 1          # Soldier+0x38c (no accessor; unresolved)
     if mask & 0x400:
         f["aim_a"] = (bs.read_bits(10) / 0x3FF * 2.0 - 1.0) * 50.0      # expanded to +-50
     if mask & 0x800:
@@ -158,7 +164,7 @@ def decode_soldier(bs: BitStream, weapon_bits: int = 4, ragdoll_bones: int = 3) 
     if mask & 0x2000:
         f["bits_2"] = bs.read_bits(2)
     if mask & 0x10000:
-        f["ladder"] = bs.read_bits(width_for(0x100))
+        f["ladder"] = bs.read_bits(_W256)
         if f["ladder"]:
             f["ladder_pos"] = bs.read_bits(12) / 0xFFF
     if mask & 0x100000:
@@ -166,7 +172,7 @@ def decode_soldier(bs: BitStream, weapon_bits: int = 4, ragdoll_bones: int = 3) 
         if f["zipline"]:
             f["zipline_pos"] = bs.read_bits(12) / 0xFFF
     if mask & 0x80000:
-        f["value_4"] = bs.read_bits(width_for(0x10))
+        f["value_4"] = bs.read_bits(_W16)
     return SoldierUpdate(mask, f, bs.bit_pos - start)
 
 

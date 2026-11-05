@@ -9,6 +9,7 @@ callers that do not track baselines pass ``origin=None`` and get the raw delta u
 from __future__ import annotations
 
 import math
+import struct
 from typing import Optional, Tuple
 
 from .bitstream import BitStream
@@ -32,20 +33,22 @@ def width_for(max_value: int) -> int:
 
 
 def _signed_components(bs: BitStream, bits: int):
-    out = []
-    for _ in range(3):
-        negative = bs.read_bits(1) == 1
-        magnitude = bs.read_bits(bits)
-        out.append(-magnitude if negative else magnitude)
-    return out
+    # three (sign, magnitude) pairs read with ONE read_bits call and split here: the stream is LSB-first, so the first field is in the
+    # low bits (the same values and the same over-read behaviour as six separate reads, a few times faster on a long recording)
+    width = bits + 1
+    raw = bs.read_bits(3 * width)
+    lo = (1 << bits) - 1
+    a = raw >> 1 & lo
+    b = raw >> (width + 1) & lo
+    c = raw >> (2 * width + 1) & lo
+    return [-a if raw & 1 else a, -b if raw >> width & 1 else b, -c if raw >> (2 * width) & 1 else c]
+
+
+_UNPACK3F = struct.Struct("<3f").unpack
 
 
 def _raw_vec(bs: BitStream) -> Vec3:
-    import struct
-    vals = []
-    for _ in range(3):
-        vals.append(struct.unpack("<f", struct.pack("<I", bs.read_bits(32)))[0])
-    return tuple(vals)  # type: ignore[return-value]
+    return _UNPACK3F(bs.read_bits(96).to_bytes(12, "little"))  # three raw float32, read as one 96-bit field
 
 
 def read_compressed_vector(bs: BitStream, scale: float, origin: Optional[Vec3] = None):
@@ -53,9 +56,10 @@ def read_compressed_vector(bs: BitStream, scale: float, origin: Optional[Vec3] =
     mode = bs.read_bits(2)
     if mode == 0:
         return _raw_vec(bs)
-    comps = _signed_components(bs, TABLE1[mode] - 1)
-    base = origin or (0.0, 0.0, 0.0)
-    return tuple(scale * c + o for c, o in zip(comps, base))
+    a, b, c = _signed_components(bs, TABLE1[mode] - 1)
+    if origin is None:
+        return (scale * a + 0.0, scale * b + 0.0, scale * c + 0.0)
+    return (scale * a + origin[0], scale * b + origin[1], scale * c + origin[2])
 
 
 def read_high_compressed_vector(bs: BitStream, scale: float, origin: Optional[Vec3] = None):
@@ -63,9 +67,10 @@ def read_high_compressed_vector(bs: BitStream, scale: float, origin: Optional[Ve
     mode = bs.read_bits(2)
     if mode == 0:
         return _raw_vec(bs)
-    comps = _signed_components(bs, TABLE_HIGH[mode] - 1)
-    base = origin or (0.0, 0.0, 0.0)
-    return tuple(scale * c + o for c, o in zip(comps, base))
+    a, b, c = _signed_components(bs, TABLE_HIGH[mode] - 1)
+    if origin is None:
+        return (scale * a + 0.0, scale * b + 0.0, scale * c + 0.0)
+    return (scale * a + origin[0], scale * b + origin[1], scale * c + origin[2])
 
 
 def read_compressed_vector2(bs: BitStream, scale: float, origin: Optional[Vec3] = None):
@@ -76,16 +81,15 @@ def read_compressed_vector2(bs: BitStream, scale: float, origin: Optional[Vec3] 
     base = origin or (0.0, 0.0, 0.0)
     if mode == 7:
         return base
-    comps = _signed_components(bs, TABLE2[mode] - 1)
-    return tuple(scale * c + o for c, o in zip(comps, base))
+    a, b, c = _signed_components(bs, TABLE2[mode] - 1)
+    return (scale * a + base[0], scale * b + base[1], scale * c + base[2])
 
 
 def read_unit_quaternion(bs: BitStream, bits: int = 14):
     """``readUnitQuaternion`` 0x08431d60: x, y, z, w each ``bits`` bits mapped to [-1, 1], then normalised."""
-    vals = []
-    for _ in range(4):
-        raw = bs.read_bits(bits)
-        vals.append(raw / ((1 << bits) - 1) * 2.0 - 1.0)
+    raw = bs.read_bits(4 * bits)                                   # the four fields in one read (LSB-first: the first is the lowest)
+    top = (1 << bits) - 1
+    vals = [(raw >> (i * bits) & top) / top * 2.0 - 1.0 for i in range(4)]
     w, x, y, z = vals              # the function stores the first value at +0xc (w), then x, y, z
     length = math.sqrt(x * x + y * y + z * z + w * w)
     if length >= 1e-3:

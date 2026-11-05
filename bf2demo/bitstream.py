@@ -63,16 +63,16 @@ class BitStream:
     # -- primitives --------------------------------------------------------
     def read_bits(self, count: int) -> int:
         """Read ``count`` bits LSB-first and return them as an integer."""
+        pos = self._pos
+        end = pos + count
+        if count > 0 and end <= self._nbits:
+            # fast path (tens of millions of calls per recording): one slice of the covering bytes, shifted to the start bit
+            self._pos = end
+            return (int.from_bytes(self._data[pos >> 3:(end + 7) >> 3], "little") >> (pos & 7)) & ((1 << count) - 1)
         if count < 0:
             raise BitStreamError("count must be non-negative")
         if count == 0:
             return 0
-        pos = self._pos
-        end = pos + count
-        if end <= self._nbits:
-            # fast path: one slice of the covering bytes, shifted to the start bit (no per-byte loop)
-            self._pos = end
-            return (int.from_bytes(self._data[pos >> 3:(end + 7) >> 3], "little") >> (pos & 7)) & ((1 << count) - 1)
         value = 0
         remaining = count
         out_shift = 0
