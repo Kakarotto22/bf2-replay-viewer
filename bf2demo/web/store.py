@@ -44,12 +44,18 @@ def _parse_to_cache(path: str, target: str) -> str:
         return "too_large"
     except ValueError as exc:
         return "too_large" if "larger than" in str(exc) else "unreadable"          # the decompression cap of the reader
+    try:
+        summary = summarise(doc)
+    except Exception:  # noqa: BLE001 - the summary is only the library card: a surprise in it must never fail the whole recording
+        traceback.print_exc()
+        summary = None
     tmp = target + ".tmp"
     try:
         with gzip.open(tmp, "wt", encoding="utf-8", compresslevel=6) as fh:
             json.dump(doc, fh, ensure_ascii=False, separators=(",", ":"))
-        with open(target + ".summary", "w", encoding="utf-8") as fh:
-            json.dump(summarise(doc), fh)
+        if summary is not None:
+            with open(target + ".summary", "w", encoding="utf-8") as fh:
+                json.dump(summary, fh)
         os.replace(tmp, target)
     finally:
         if os.path.exists(tmp):

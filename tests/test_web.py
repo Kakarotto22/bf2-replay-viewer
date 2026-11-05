@@ -276,3 +276,16 @@ class SummaryTest(unittest.TestCase):
         self.assertEqual(summary["top_player"], {"name": "a", "score": 10})
         doc["scoreboard"] = [dict(r, score=None) for r in doc["scoreboard"]]
         self.assertIsNone(summarise(doc)["top_player"])
+
+    def test_a_broken_summary_still_keeps_the_parsed_document(self):
+        # the summary is only the library card: when it fails, the recording must still open (no empty .summary file left behind)
+        from unittest import mock
+        from bf2demo.web import store
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp, True)
+        target = os.path.join(tmp, "doc.json.gz")
+        with mock.patch.object(store, "summarise", side_effect=TypeError("boom")):
+            self.assertEqual(store._parse_to_cache(sample_path(SAMPLE), target), "ok")
+        with gzip.open(target, "rt", encoding="utf-8") as fh:
+            self.assertIn("scoreboard", json.load(fh))
+        self.assertFalse(os.path.exists(target + ".summary"))
