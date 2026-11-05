@@ -100,7 +100,8 @@ def demo_id(path: str) -> str:
 def summarise(doc: dict) -> dict:
     demo = doc["demo"]
     humans = [p for p in doc["players"] if not p["is_ai"]]
-    top = max(doc["scoreboard"], key=lambda r: r["score"], default=None)
+    # a player who joins and leaves on the same tick never gets a score (None = unknown): such a row must not break the summary
+    top = max((r for r in doc["scoreboard"] if r["score"] is not None), key=lambda r: r["score"], default=None)
     return {"map": demo["map"], "mode": demo["mode"], "server": demo["server"], "recorded_at": demo["recorded_at"],
             "duration_s": round((demo["last_tick"] - demo["first_tick"]) / 30), "players": len(doc["players"]),
             "humans": len(humans), "kills": sum(1 for f in doc["feed"] if f["kind"] == "kill"),

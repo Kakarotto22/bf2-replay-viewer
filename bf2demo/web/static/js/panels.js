@@ -215,7 +215,7 @@ export function renderBoard() {
   let html = `<table class="t"><tr><th></th>${th("name", "name")}${th("score", "score")}${th("kills", "kills")}${th("deaths", "deaths")}</tr>`;
   for (const r of rows) {
     html += `<tr class="row ${S.sel === r.player_id ? "sel" : ""}" data-p="${r.player_id}"><td>${kitImg(r.kit)}</td><td>${dot(TEAM_COL[r.team] || TEAM_COL[0])}${esc(r.name)}</td>` +
-      `<td class="num">${r.score}</td><td class="num">${r.kills}</td><td class="num">${r.deaths}</td></tr>`;
+      `<td class="num">${r.score != null ? r.score : "?"}</td><td class="num">${r.kills}</td><td class="num">${r.deaths}</td></tr>`;
   }
   const box = $("board"); box.innerHTML = html + "</table>";
   box.querySelectorAll("th[data-k]").forEach((h) => { h.onclick = () => { ui.sort = [h.dataset.k, ui.sort[0] === h.dataset.k ? -ui.sort[1] : -1]; renderBoard(); }; });

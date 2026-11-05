@@ -262,3 +262,17 @@ class MapsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SummaryTest(unittest.TestCase):
+    def test_a_player_without_a_score_does_not_break_the_summary(self):
+        # a player who joins and leaves on the same tick never gets a score (None): the summary used to crash on it, so the upload failed
+        from bf2demo.web.store import summarise
+        doc = build_viewer_document(replay(SAMPLE))
+        row = {"player_id": 1, "name": "a", "team": 1, "score": 10, "kills": 2, "deaths": 1}
+        doc["scoreboard"] = [row, dict(row, player_id=2, name="ghost", score=None, kills=0, deaths=0), dict(row, player_id=3, name="b", score=4)]
+        summary = summarise(doc)
+        self.assertIsNotNone(summary["top_player"])
+        self.assertEqual(summary["top_player"], {"name": "a", "score": 10})
+        doc["scoreboard"] = [dict(r, score=None) for r in doc["scoreboard"]]
+        self.assertIsNone(summarise(doc)["top_player"])
