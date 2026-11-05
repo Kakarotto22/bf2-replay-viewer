@@ -289,3 +289,45 @@ class SummaryTest(unittest.TestCase):
         with gzip.open(target, "rt", encoding="utf-8") as fh:
             self.assertIn("scoreboard", json.load(fh))
         self.assertFalse(os.path.exists(target + ".summary"))
+
+
+class ObjectAtCacheTest(unittest.TestCase):
+    def test_cached_lookup_answers_like_the_plain_search(self):
+        # object_at remembers its last answer per id with the ticks where it stays right; ids are reused after DestroyObject, so compare
+        # with the plain search for every id over the whole recording, in time order (as the decoders ask) and in random order
+        import random
+        from bf2demo.replay import Replay
+
+        def plain(rep, object_id, tick):
+            for obj in reversed([o for o in rep.object_history if o.object_id == object_id]):
+                if obj.created_tick <= tick and (obj.destroyed_tick is None or obj.destroyed_tick >= tick):
+                    return obj
+            return None
+
+        rep = replay("auto_all_vehicles_xpack_surge16.bf2demo")
+        fresh = Replay(demo=rep.demo, object_history=rep.object_history)
+        ids = sorted({o.object_id for o in rep.object_history})
+        reused = [i for i in ids if sum(o.object_id == i for o in rep.object_history) > 1]
+        self.assertTrue(reused, "the sample should reuse some object ids")
+        ticks = sorted({o.created_tick for o in rep.object_history} | {o.destroyed_tick for o in rep.object_history if o.destroyed_tick is not None})
+        ticks = sorted(set(ticks) | {t + d for t in ticks for d in (-1, 1)})
+        queries = [(i, t) for t in ticks for i in reused] + [(i, t) for i in ids[:40] for t in ticks[::7]]
+        for object_id, tick in queries:
+            self.assertIs(fresh.object_at(object_id, tick), plain(rep, object_id, tick), (object_id, tick))
+        random.Random(7).shuffle(queries)
+        for object_id, tick in queries:
+            self.assertIs(fresh.object_at(object_id, tick), plain(rep, object_id, tick), (object_id, tick))
+
+    def test_overlapping_lives_the_later_instance_wins(self):
+        # a missing DestroyObject leaves two lives of one id overlapping: the later instance must win from its first tick, also after the
+        # cache answered with the earlier one
+        from bf2demo.replay import GameObject, Replay
+        a = GameObject(5, 1, 1, None, None, 10)                       # never destroyed
+        b = GameObject(5, 1, 1, None, None, 50, destroyed_tick=80)
+        c = GameObject(5, 1, 1, None, None, 90)
+        rep = Replay(demo=None, object_history=[a, b, c])
+        expected = {9: None, 10: a, 49: a, 50: b, 80: b, 81: a, 89: a, 90: c, 500: c}
+        for order in (sorted(expected), sorted(expected, reverse=True), [10, 90, 49, 81, 50, 9, 89, 80, 500]):
+            fresh = Replay(demo=None, object_history=[a, b, c])
+            for tick in order:
+                self.assertIs(fresh.object_at(5, tick), expected[tick], tick)

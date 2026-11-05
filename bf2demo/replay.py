@@ -23,6 +23,10 @@ from .templatedb import TemplateDB, TemplateInfo
 Vec3 = Tuple[float, float, float]
 
 
+#: an open end of life (an object never destroyed) for the object_at cache
+_FOREVER = 1 << 62
+
+
 @dataclass
 class GameObject:
     object_id: int
@@ -193,8 +197,10 @@ class Replay:
     last_tick: Optional[int] = None
     _index: Optional[Dict[int, List[GameObject]]] = field(default=None, repr=False)
     _sorted_ids: Optional[List[int]] = field(default=None, repr=False)
+    _hot: Dict[int, tuple] = field(default_factory=dict, repr=False)   # object_at: id -> (instance, first tick, last tick it answers)
 
     def _build_index(self) -> None:
+        self._hot = {}
         index: Dict[int, List[GameObject]] = {}
         for obj in self.object_history:
             index.setdefault(obj.object_id, []).append(obj)
@@ -205,8 +211,22 @@ class Replay:
         """The object instance with this id alive at ``tick`` (ids are reused after DestroyObject)."""
         if self._index is None:
             self._build_index()
-        for obj in reversed(self._index.get(object_id, [])):
+        hit = self._hot.get(object_id)
+        if hit is not None and hit[1] <= tick <= hit[2]:
+            return hit[0]
+        candidates = self._index.get(object_id, [])
+        for at in range(len(candidates) - 1, -1, -1):
+            obj = candidates[at]
             if obj.created_tick <= tick and (obj.destroyed_tick is None or obj.destroyed_tick >= tick):
+                # remember the answer with the ticks where it stays the answer (millions of calls per recording, mostly for the same
+                # objects): inside the object's life and outside the life of every LATER instance (the later one wins, as in this loop)
+                lo, hi = obj.created_tick, obj.destroyed_tick if obj.destroyed_tick is not None else _FOREVER
+                for later in candidates[at + 1:]:
+                    if later.created_tick > tick:
+                        hi = min(hi, later.created_tick - 1)
+                    elif later.destroyed_tick is not None:          # created before tick, so dead by tick: alive only before it
+                        lo = max(lo, later.destroyed_tick + 1)
+                self._hot[object_id] = (obj, lo, hi)
                 return obj
         return None
 

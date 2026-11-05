@@ -23,7 +23,7 @@ import gzip
 import json
 import os
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 _PATH = os.path.join(os.path.dirname(__file__), "assets", "templates.json.gz")
@@ -47,11 +47,12 @@ class TemplateInfo:
     #: ``root id + 1 + index`` has its own ghost: [netseq, engines] each
     pco_children: Optional[list] = None
 
-    @property
+    @cached_property
     def range_bits(self) -> int:
         """Width of the health field of SimpleObject/GenericProjectile bodies: ``width_for(max + wreck hit points)``.
 
         Templates without ``armor.*`` data have a zero range, i.e. a 0-bit field (verified for 25 projectile templates).
+        Computed once per template (read for every vehicle update of a recording; a frozen dataclass still allows cached_property).
         """
         total = int(self.armor_max or 0) + int(self.armor_wreck or 0)
         bits = 0
