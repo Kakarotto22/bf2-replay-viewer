@@ -101,6 +101,8 @@ def build_tracks(replay: Replay, projectiles: bool = True, parts: bool = False,
     tracks: Dict[Tuple[int, int], Track] = {}
     last_pose: Dict[Tuple[int, int], List[object]] = {}
 
+    object_at = replay.object_at
+    contexts: Dict[int, SimpleObjectContext] = {}
     for packet in replay.demo.packets:
         if not packet.data or packet.tick < 0:
             continue
@@ -108,10 +110,14 @@ def build_tracks(replay: Replay, projectiles: bool = True, parts: bool = False,
             pkt = parse_packet(packet.data)
         except PacketError:
             continue
+        # one reader per packet, moved to each record (millions of records per long round; the decoders here never look at its
+        # over-read flag, so a fresh reader per record gave the same values)
+        bs = BitStream(packet.data)
+        tick = packet.tick
         for ghost in pkt.ghosts:
             if ghost.action != GHOST_UPDATE:
                 continue
-            obj = replay.object_at(ghost.ghost_id, packet.tick)
+            obj = object_at(ghost.ghost_id, tick)
             if obj is None and parts:
                 _child_parts(replay, tracks, packet, ghost)
                 continue
@@ -125,8 +131,10 @@ def build_tracks(replay: Replay, projectiles: bool = True, parts: bool = False,
             track = tracks.get(key)
             if track is None:
                 track = tracks[key] = Track(obj)
-            pose = last_pose.setdefault(key, [None, None])
-            bs = BitStream(packet.data, ghost.bit_start)
+            pose = last_pose.get(key)
+            if pose is None:
+                pose = last_pose[key] = [None, None]
+            bs._pos = ghost.bit_start
             if cls == "Soldier":
                 upd = decode_soldier(bs)
                 if "weapon_item_index" in upd.fields:
@@ -164,7 +172,10 @@ def build_tracks(replay: Replay, projectiles: bool = True, parts: bool = False,
                         collected = []
                         upd = decode_simple_object_pose(BitStream(packet.data, ghost.bit_start), bool(obj.template.mobile))
                 elif cls == "PlayerControlObject" and obj.template.armor_wreck:
-                    upd = decode_simple_object(bs, SimpleObjectContext(bool(obj.template.mobile), obj.template.range_bits, True))
+                    ctx = contexts.get(obj.template.template_id)
+                    if ctx is None:                      # one context per template (it only holds template facts)
+                        ctx = contexts[obj.template.template_id] = SimpleObjectContext(bool(obj.template.mobile), obj.template.range_bits, True)
+                    upd = decode_simple_object(bs, ctx)
                 else:
                     upd = decode_simple_object_pose(bs, bool(obj.template.mobile))
                 if cls == "PlayerControlObject" and "range_value" in upd.fields:
